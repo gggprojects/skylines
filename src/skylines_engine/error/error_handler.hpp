@@ -1,16 +1,28 @@
 #ifndef SKYLINES_ERROR_HANDLER_HPP
 #define SKYLINES_ERROR_HANDLER_HPP
 
-#include "export_import.hpp"
+#include <string>
+#include <memory>
 
-namespace skylines { namespace error {
+#include "export_import.hpp"
+#include "error/threads_errors.hpp"
+#include "error/error_descriptor.hpp"
+
+namespace sl { namespace error {
     class skylines_engine_DLL_EXPORTS ErrorHandler {
     public:
-        ErrorHandler();
+        ErrorHandler(std::string logger, std::string severity, std::shared_ptr<ThreadsErrors> thread_errors);
 
-        int GetValue();
+        void PushError(std::shared_ptr<ErrorDescriptor> err) {
+            thread_errors_->PushError(err);
+        }
+
+        std::vector<std::string> GetErrors() {
+            return std::move(thread_errors_->GetErrors().GetErrors());
+        }
+
     private:
-        int i;
+        std::shared_ptr<ThreadsErrors> thread_errors_;
     };
 }}
 
