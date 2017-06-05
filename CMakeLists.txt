@@ -13,6 +13,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 # Cmake Inclusions
 include(cmake/util.cmake)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
 # =============================================================================
 # Include third party libraries
 # =============================================================================
@@ -48,6 +50,10 @@ if(WIN32)
        "${APIS_PATH}/googletest_with_gmock/bin/Debug/gtest_main.dll"
        "${APIS_PATH}/googletest_with_gmock/bin/Debug/gmock.dll"
        "${APIS_PATH}/googletest_with_gmock/bin/Debug/gmock_main.dll"
+
+       #qt
+       "C:/Qt/5.9/msvc2015_64/bin/Qt5Guid.dll"
+       "C:/Qt/5.9/msvc2015_64/bin/Qt5Cored.dll"
     )
     set(DEPENDENCY_LIBS_AND_FILES_RELEASE_SPECIFIC
        #gtest
@@ -55,6 +61,10 @@ if(WIN32)
        "${APIS_PATH}/googletest_with_gmock/bin/Release/gtest_main.dll"
        "${APIS_PATH}/googletest_with_gmock/bin/Release/gmock.dll"
        "${APIS_PATH}/googletest_with_gmock/bin/Release/gmock_main.dll"
+
+       #qt
+       "C:/Qt/5.9/msvc2015_64/bin/Qt5Gui.dll"
+       "C:/Qt/5.9/msvc2015_64/bin/Qt5Core.dll"
     )
 endif()
 
