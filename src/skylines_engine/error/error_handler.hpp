@@ -4,12 +4,13 @@
 #include "export_import.hpp"
 
 namespace skylines { namespace error {
-    class skylines_DLL_EXPORTS ErrorHandler {
+    class skylines_engine_DLL_EXPORTS ErrorHandler {
     public:
-        ErrorHandler() {}
+        ErrorHandler();
 
-
+        int GetValue();
     private:
+        int i;
     };
 }}
 

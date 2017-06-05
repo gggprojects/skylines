@@ -10,10 +10,13 @@ qt5_wrap_ui(UIS_HEADERS ${UIS})
 # #wraper to generate .h files from .qrc files. The new .h files are stored in RESOURCES_HEADERS variable
 # qt5_add_resources(RESOURCES_HEADERS ${RESOURCES})
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOC ON)
+
 #we store in variable SRCS all .cpp and .h and .cu files
 file(GLOB_RECURSE SRCS *.hpp *.cpp)
 #we set the visual studio virtual folders
 set_project_virtual_folders("${SRCS}")
 
 add_executable(skylines_ui "${SRCS}" ${UIS_HEADERS})
-target_link_libraries(skylines_ui PRIVATE Qt5::Widgets)
+target_link_libraries(skylines_ui PRIVATE Qt5::Widgets skylines_engine)
