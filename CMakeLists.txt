@@ -37,7 +37,6 @@ include_directories("${APIS_PATH}/spdlog-master/include")
 
 #qt
 set(CMAKE_INCLUDE_CURRENT_DIR ON) # Find includes in corresponding build directories
-set(CMAKE_AUTOMOC ON) # Instruct CMake to run moc automatically when needed.
 # Find libraries
 find_package(Qt5Widgets)
 find_package(Qt5Core)
@@ -52,8 +51,9 @@ if(WIN32)
        "${APIS_PATH}/googletest_with_gmock/bin/Debug/gmock_main.dll"
 
        #qt
-       "C:/Qt/5.9/msvc2015_64/bin/Qt5Guid.dll"
        "C:/Qt/5.9/msvc2015_64/bin/Qt5Cored.dll"
+       "C:/Qt/5.9/msvc2015_64/bin/Qt5Guid.dll"
+       "C:/Qt/5.9/msvc2015_64/bin/Qt5Widgetsd.dll"
     )
     set(DEPENDENCY_LIBS_AND_FILES_RELEASE_SPECIFIC
        #gtest
@@ -63,8 +63,9 @@ if(WIN32)
        "${APIS_PATH}/googletest_with_gmock/bin/Release/gmock_main.dll"
 
        #qt
-       "C:/Qt/5.9/msvc2015_64/bin/Qt5Gui.dll"
        "C:/Qt/5.9/msvc2015_64/bin/Qt5Core.dll"
+       "C:/Qt/5.9/msvc2015_64/bin/Qt5Gui.dll"
+       "C:/Qt/5.9/msvc2015_64/bin/Qt5Widgets.dll"
     )
 endif()
 

@@ -1,13 +1,10 @@
-#include <QGuiApplication>
-#include "ui_mainwindow.h"
+#include "main_window.hpp"
+#include <QApplication>
 
 int main(int argc, char *argv[]) {
-    QGuiApplication app(argc, argv);
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
 
-    Ui::MainWindow mw;
-    //engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    //if (engine.rootObjects().isEmpty())
-    //    return -1;
-    
-    return app.exec();
+    return a.exec();
 }
