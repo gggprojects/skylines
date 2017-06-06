@@ -5,8 +5,11 @@
 
 namespace sl { namespace common {
 
-    class SkylineElement : public error::ErrorHandler {
-
+    class skylines_engine_DLL_EXPORTS SkylineElement : public error::ErrorHandler {
+    public:
+        SkylineElement(const std::string &logger, const std::string &severity, error::ThreadErrors_ptr thread_errors) :
+            ErrorHandler(logger, severity, thread_errors) {
+        }
     };
 }}
 

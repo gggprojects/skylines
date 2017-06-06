@@ -8,18 +8,24 @@
 #include "error/thread_errors_stack.hpp"
 
 namespace sl { namespace error {
+    
+    class ThreadsErrors;
+
+    using ThreadErrors_ptr = std::shared_ptr<ThreadsErrors>;
+    using ErrorDescriptor_ptr = std::shared_ptr<ErrorDescriptor>;
+
     class ThreadsErrors {
     public:
         ThreadsErrors() {}
 
-        std::shared_ptr<ThreadsErrors> Instanciate() {
+        static ThreadErrors_ptr Instanciate() {
             return std::make_shared<ThreadsErrors>();
         }
 
         ThreadsErrors(const ThreadsErrors &other) = delete;
         ThreadsErrors(ThreadsErrors &&other) = delete;
 
-        void PushError(std::shared_ptr<ErrorDescriptor> err) {
+        void PushError(ErrorDescriptor_ptr err) {
             std::lock_guard<std::mutex> lock_(map_mutex_);
             thread_errors_map_[std::this_thread::get_id()].PushError(err);
         }

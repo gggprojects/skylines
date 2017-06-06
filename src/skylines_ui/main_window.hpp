@@ -2,20 +2,28 @@
 #define SKYLINES_MAINWINDOW_HPP
 
 #include <QMainWindow>
+#include "ogl/ogl_widget.hpp"
+#include "queries/weighted.hpp"
 
 namespace Ui {
     class MainWindow;
 }
 
-class MainWindow : public QMainWindow {
-    Q_OBJECT
+namespace sl { namespace ui {
+    class MainWindow : public QMainWindow {
+        Q_OBJECT
+    public:
+        explicit MainWindow(QWidget *parent = 0);
+        ~MainWindow();
 
-public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    private:
+        void Run();
 
-private:
-    Ui::MainWindow *ui;
-};
+        Ui::MainWindow *ui_;
+        ogl::OGLWidget *ogl_;
 
+        sl::error::ThreadErrors_ptr thread_errors_ptr_;
+        sl::queries::WeightedQuery weighted_query_;
+    };
+}}
 #endif // SKYLINES_MAINWINDOW_HPP
