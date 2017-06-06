@@ -3,9 +3,9 @@
 #include "log/logger.hpp"
 
 namespace sl { namespace error {
-    ErrorHandler::ErrorHandler(std::string logger, std::string severity, std::shared_ptr<ThreadsErrors> thread_errors) :
+    ErrorHandler::ErrorHandler(const std::string &logger, const std::string &severity, ThreadErrors_ptr thread_errors) :
         thread_errors_(thread_errors) {
-        log::Logger::AddLogger(logger, severity);
+        logger_ptr_ = log::Logger::AddLogger(logger, severity);
     }
 }}
 

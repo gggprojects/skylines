@@ -4,9 +4,12 @@
 #include "spdlog/logger.h"
 
 namespace sl { namespace log {
+
+    using Logger_ptr = std::shared_ptr<spdlog::logger>;
     class Logger {
     public:
-        static void AddLogger(const std::string &logger_name, std::string severity);
+        static Logger_ptr AddLogger(const std::string &logger_name, const std::string &severity);
+        static void SetSeverity(Logger_ptr logger_ptr_, const std::string &severity);
     private:
         static std::shared_ptr<spdlog::sinks::stdout_sink_mt> log_sinker_;
     };
