@@ -1,11 +1,11 @@
-#ifndef SKYLINES_OGLWIDGET_HPP
-#define SKYLINES_OGLWIDGET_HPP
+#ifndef SKYLINES_OGL_OGLWIDGET_HPP
+#define SKYLINES_OGL_OGLWIDGET_HPP
 
 #include <QWidget>
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-//#include <QOpenGLBuffer>
-#include <QMatrix4x4>
+
+#include "ogl/camera.hpp"
 
 namespace sl { namespace ui { namespace ogl {
     class OGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
@@ -31,6 +31,7 @@ namespace sl { namespace ui { namespace ogl {
         void resizeGL(int width, int height) override;
         void mousePressEvent(QMouseEvent *event) override;
         void mouseMoveEvent(QMouseEvent *event) override;
+        void wheelEvent(QWheelEvent *event) override;
 
     private:
         int xRot_;
@@ -39,9 +40,7 @@ namespace sl { namespace ui { namespace ogl {
 
         QPoint lastPos_;
 
-        QMatrix4x4 projection_;
-        QMatrix4x4 camera_;
-        QMatrix4x4 world_;
+        Camera camera_;
     };
 }}}
 #endif // SKYLINES_OGLWIDGET_HPP

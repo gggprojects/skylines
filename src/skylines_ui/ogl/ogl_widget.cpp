@@ -50,6 +50,13 @@ namespace sl { namespace ui { namespace ogl {
     void OGLWidget::initializeGL() {
         connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &OGLWidget::Cleanup);
         initializeOpenGLFunctions();
+
+        QVector3D eye(0, 0, 0);
+        QVector3D center(0, 0, -1);
+        QVector3D up(0, 1, 0);
+        camera_.LookAt(eye, center, up);
+
+        camera_.SetOrthographic(-100, 100, 100, -100, -100, 100);
         glClearColor(1, 1, 1, 1);
         glEnable(GL_DEPTH_TEST);
 
@@ -82,10 +89,10 @@ namespace sl { namespace ui { namespace ogl {
         //glOrtho(0, w, 0, h, -1, 1);
         //glMatrixMode(GL_MODELVIEW);
         //glLoadIdentity();
-        glMatrixMode(GL_PROJECTION);
-        projection_.setToIdentity();
-        projection_.perspective(45.0f, GLfloat(w) / h, 0.0f, 100.0f);
-        glMatrixMode(GL_MODELVIEW);
+        //glMatrixMode(GL_PROJECTION);
+        //projection_.setToIdentity();
+        //projection_.perspective(45.0f, GLfloat(w) / h, 0.0f, 100.0f);
+        //glMatrixMode(GL_MODELVIEW);
     }
 
     void OGLWidget::mousePressEvent(QMouseEvent *event) {
@@ -106,21 +113,33 @@ namespace sl { namespace ui { namespace ogl {
         lastPos_ = event->pos();
     }
 
+    void OGLWidget::wheelEvent(QWheelEvent *event) {
+        //QPoint p = event->angleDelta();
+        int a = event->delta();
+        camera_
+        //int numDegrees = 100 * direction;
+        //float proportion = c->right - c->left;
+        //float numSteps = ((numDegrees / 15.0)*0.008)*proportion;
+
+    }
+
     void OGLWidget::paintGL() {
+        camera_.Set();
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glColor3f(1, 0, 0);
         glBegin(GL_POLYGON); {
-            glVertex3f(0, 0, 1);
-            glVertex2f(100, 500);
-            glVertex2f(500, 100);
+            glVertex3f(-50, -50, 1);
+            glVertex2f(50, -50);
+            glVertex2f(0, 50);
         }glEnd();
 
         //world_.setToIdentity();
         ////world_.rotate(180.0f - (xRot_ / 16.0f), 1, 0, 0);
         ////world_.rotate(yRot_ / 16.0f, 0, 1, 0);
         ////world_.rotate(zRot_ / 16.0f, 0, 0, 1);
-        glColor3f(0, 0, 1);
+        glColor3f(1, 0, 1);
         //unsigned int p[3];
         //p[0] = 0;
         //p[1] = 0;
