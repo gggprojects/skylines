@@ -3,8 +3,10 @@ file(GLOB_RECURSE SRCS *.hpp *.cpp *.cu *.cuh)
 #we set the visual studio virtual folders
 set_project_virtual_folders("${SRCS}")
 
+include_directories(${Qt5Widgets_INCLUDE_DIRS})
+
 add_library(skylines_engine SHARED "${SRCS}")
-target_link_libraries(skylines_engine PRIVATE ${LIBS})
+target_link_libraries(skylines_engine PRIVATE ${LIBS} ${OPENGL_LIBRARIES})
 
 ######################################################
 # For VS environment purposes we copy the needed dll

@@ -4,24 +4,7 @@
 
 namespace sl { namespace ui { namespace ogl {
     Camera::Camera() {
-        type_ = Type::PERSPECTIVE;
         view_.setToIdentity();
-    }
-
-    void Camera::UpdateProjectionMatrix() {
-        //We activate the matrix we want to work: projection
-        glMatrixMode(GL_PROJECTION);
-
-        //We set it as identity
-        glLoadIdentity();
-
-        if (type_ == Type::PERSPECTIVE)
-            gluPerspective(fov_, aspect_, near_plane_, far_plane_);
-        else
-            glOrtho(left_, right_, bottom_, top_, near_plane_, far_plane_);
-
-        //upload to hardware
-        glGetFloatv(GL_PROJECTION_MATRIX, projection_.data());
     }
 
     void Camera::Set() {
@@ -32,45 +15,6 @@ namespace sl { namespace ui { namespace ogl {
         glLoadMatrixf(projection_.data());
     }
 
-    void Camera::SetOrthographic(float left, float right, float top, float bottom, float near_plane, float far_plane) {
-        type_ = Type::ORTHOGRAPHIC;
-
-        left_ = left;
-        right_ = right;
-        top_ = top;
-        bottom_ = bottom;
-        near_plane_ = near_plane;
-        far_plane_ = far_plane;
-
-        UpdateProjectionMatrix();
-    }
-
-    void Camera::SetPerspective(float fov, float aspect, float near_plane, float far_plane) {
-        type_ = Type::PERSPECTIVE;
-
-        fov_ = fov;
-        aspect_ = aspect;
-        near_plane_ = near_plane;
-        far_plane_ = far_plane;
-
-        UpdateProjectionMatrix();
-    }
-
-
-    QVector3D Camera::GetLocalVector(const QVector3D &v) {
-        QMatrix4x4 iV = view_;
-        iV = iV.inverted();
-        //QVector3D result = iV.rotate(v);
-        //return std::move(result);
-        return QVector3D();
-    }
-
-    void Camera::Move(QVector3D delta) {
-        QVector3D localDelta = GetLocalVector(delta);
-        eye_ = localDelta;
-        center_ -= localDelta;
-        UpdateViewMatrix();
-    }
 
     void Camera::UpdateViewMatrix() {
         //We activate the matrix we want to work: modelview
@@ -86,7 +30,115 @@ namespace sl { namespace ui { namespace ogl {
         glGetFloatv(GL_MODELVIEW_MATRIX, view_.data());
     }
 
-    void Camera::Rotate(float angle, const QVector3D& axis) {
+    void Camera::LookAt(const QVector3D& eye, const QVector3D& center, const QVector3D& up) {
+        eye_ = eye;
+        center_ = center;
+        up_ = up;
+
+        UpdateViewMatrix();
+    }
+
+    QVector3D rotateVector(const QVector3D& v, const QMatrix4x4 &view) {
+        QMatrix4x4 temp = view;
+        temp.data()[12] = 0;
+        temp.data()[13] = 0;
+        temp.data()[14] = 0;
+        return temp * v;
+    }
+
+    QVector3D Camera::GetLocalVector(const QVector3D &v) {
+        QMatrix4x4 iV = view_;
+        iV = iV.inverted();
+        return std::move(rotateVector(v, iV));
+    }
+
+    void Camera::Move(QVector3D delta) {
+        QVector3D localDelta = GetLocalVector(delta);
+        eye_ -= localDelta;
+        center_ -= localDelta;
+        UpdateViewMatrix();
+    }
+
+    //----------------------------------------
+    //------------ Ortographic ---------------
+    //----------------------------------------
+    void OrtographicCamera::SetOrthographic(float left, float right, float top, float bottom, float near_plane, float far_plane) {
+        left_ = left;
+        right_ = right;
+        top_ = top;
+        bottom_ = bottom;
+        near_plane_ = near_plane;
+        far_plane_ = far_plane;
+
+        UpdateProjectionMatrix();
+    }
+
+    void OrtographicCamera::UpdateProjectionMatrix() {
+        //We activate the matrix we want to work: projection
+        glMatrixMode(GL_PROJECTION);
+
+        //We set it as identity
+        glLoadIdentity();
+
+        glOrtho(left_, right_, bottom_, top_, near_plane_, far_plane_);
+
+        //upload to hardware
+        glGetFloatv(GL_PROJECTION_MATRIX, projection_.data());
+    }
+
+    void OrtographicCamera::Zoom(float delta) {
+        left_ += delta;
+        right_ -= delta;
+        top_ -= delta;
+        bottom_ += delta;
+        UpdateProjectionMatrix();
+    }
+
+    QVector4D OrtographicCamera::GetOrtographic() {
+        return std::move(QVector4D(left_, right_, top_, bottom_));
+    }
+
+    void OrtographicCamera::Resize(int width, int heigth) {
+        //We activate the matrix we want to work: projection
+        glMatrixMode(GL_PROJECTION);
+
+        //We set it as identity
+        glLoadIdentity();
+
+        glViewport(0, 0, width, heigth);
+
+        glOrtho(left_, right_, bottom_, top_, near_plane_, far_plane_);
+
+        //upload to hardware
+        glGetFloatv(GL_PROJECTION_MATRIX, projection_.data());
+    }
+
+    //----------------------------------------
+    //------------ Perspective ---------------
+    //----------------------------------------
+    void PerspectiveCamera::SetPerspective(float fov, float aspect, float near_plane, float far_plane) {
+        fov_ = fov;
+        aspect_ = aspect;
+        near_plane_ = near_plane;
+        far_plane_ = far_plane;
+
+        UpdateProjectionMatrix();
+    }
+
+    void PerspectiveCamera::UpdateProjectionMatrix() {
+        //We activate the matrix we want to work: projection
+        glMatrixMode(GL_PROJECTION);
+
+        //We set it as identity
+        glLoadIdentity();
+
+        gluPerspective(fov_, aspect_, near_plane_, far_plane_);
+
+        //upload to hardware
+        glGetFloatv(GL_PROJECTION_MATRIX, projection_.data());
+    }
+
+    void PerspectiveCamera::Rotate(float angle, const QVector3D& axis) {
         QMatrix4x4 R;
         R.rotate(angle, axis);
         QVector3D new_front = R * (center_ - eye_);
@@ -94,11 +146,22 @@ namespace sl { namespace ui { namespace ogl {
         UpdateViewMatrix();
     }
 
-    void Camera::LookAt(const QVector3D& eye, const QVector3D& center, const QVector3D& up) {
-        eye_ = eye;
-        center_ = center;
-        up_ = up;
+    void PerspectiveCamera::Resize(int width, int heigth) {
+        //We activate the matrix we want to work: projection
+        glMatrixMode(GL_PROJECTION);
 
-        UpdateViewMatrix();
+        //We set it as identity
+        glLoadIdentity();
+
+        glViewport(0, 0, width, heigth);
+
+        gluPerspective(fov_, aspect_, near_plane_, far_plane_);
+
+        //upload to hardware
+        glGetFloatv(GL_PROJECTION_MATRIX, projection_.data());
+    }
+
+    void PerspectiveCamera::Zoom(float delta) {
+        Move(QVector3D(0, 0, -delta));
     }
 }}}

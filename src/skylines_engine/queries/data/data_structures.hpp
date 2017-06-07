@@ -7,7 +7,7 @@ namespace sf { namespace queries {namespace data {
         float y_;
     };
 
-    struct Facility {
+    struct WeightedPoint {
         Point point_;
         float weight_;
     };

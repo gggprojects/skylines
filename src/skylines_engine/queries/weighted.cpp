@@ -14,4 +14,8 @@ namespace sl { namespace queries {
         SL_LOG_DEBUG("Debug");
         return 0;
     }
+
+    void WeightedQuery::Render() {
+        input_data_.Render();
+    }
 }}

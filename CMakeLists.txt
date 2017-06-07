@@ -40,6 +40,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON) # Find includes in corresponding build directo
 # Find libraries
 find_package(Qt5Widgets)
 find_package(Qt5Core)
+# OpenGL & GLEW library
+find_package(OpenGL)
 
 #dll post copy depencies. Debug purposes. In Linux we use stow
 if(WIN32)
