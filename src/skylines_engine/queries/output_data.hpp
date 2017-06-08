@@ -1,13 +1,14 @@
-#ifndef SLYLINES_QUERIES_INPUT_DATA_HPP
-#define SLYLINES_QUERIES_INPUT_DATA_HPP
+#ifndef SLYLINES_QUERIES_OUTPUT_DATA_HPP
+#define SLYLINES_QUERIES_OUTPUT_DATA_HPP
 
+#include "export_import.hpp"
 #include "common/irenderable.hpp"
 
 namespace sl { namespace queries {
-    class InputData : public common::IRenderable {
+    class skylines_engine_DLL_EXPORTS OutputData : public common::IRenderable {
     public:
         void Render() final {
-            glColor3f(1, 0, 0);
+            glColor3f(0, 1, 0);
             glBegin(GL_POLYGON); {
                 glVertex2f(0.25, 0.25);
                 glVertex2f(0.75, 0.25);
@@ -18,4 +19,5 @@ namespace sl { namespace queries {
 
     };
 }}
-#endif // !SLYLINES_QUERIES_INPUT_DATA_HPP
+
+#endif // !SLYLINES_QUERIES_DATA_OUTPUT_DATA_HPP

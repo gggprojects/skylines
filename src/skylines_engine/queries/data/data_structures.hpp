@@ -1,8 +1,12 @@
 #ifndef SKYLINES_QUERIES_DATA_DATA_STRUCTURES_HPP
 #define SKYLINES_QUERIES_DATA_DATA_STRUCTURES_HPP
 
-namespace sf { namespace queries {namespace data {
+namespace sl { namespace queries {namespace data {
     struct Point {
+
+        Point(float x, float y) : x_(x), y_(y) {
+        }
+
         float x_;
         float y_;
     };

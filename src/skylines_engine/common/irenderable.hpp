@@ -4,8 +4,10 @@
 
 #include <QOpenGLFunctions>
 
+#include "export_import.hpp"
+
 namespace sl { namespace common { 
-    class IRenderable {
+    class skylines_engine_DLL_EXPORTS IRenderable {
     public:
         virtual void Render() = 0;
     };

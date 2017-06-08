@@ -18,8 +18,12 @@ namespace sl { namespace ui {
         ~MainWindow();
 
     private:
+        void InitRandom();
         void SaveImage();
         void Run();
+        void SerializeInputPoints();
+        void LoadInputPoints();
+        void ClearInputPoints();
 
         Ui::MainWindow *ui_;
         ogl::OGLWidget *ogl_;

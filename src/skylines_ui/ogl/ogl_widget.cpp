@@ -49,9 +49,12 @@ namespace sl { namespace ui { namespace ogl {
         int dy = event->y() - lastPos_.y();
 
         if (event->buttons() & Qt::LeftButton) {
-            float speed = 0.003f;
             QVector4D ortho = camera_.GetOrtographic();
-            QVector3D movement((-dx)*ortho.y()*speed, dy*ortho.x()*speed, 0);
+            float right = ortho.y();
+            float proportion = ortho.y() - ortho.x();
+            float speed = 0.001f * proportion;
+
+            QVector3D movement(dx*right*speed, -dy*right*speed, 0);
             camera_.Move(movement);
             update();
         } else if (event->buttons() & Qt::RightButton) {
