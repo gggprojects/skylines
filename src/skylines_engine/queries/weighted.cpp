@@ -5,6 +5,10 @@ namespace sl { namespace queries {
         SkylineElement("WeightedQuery", "info", error_ptr) {
     }
 
+    void WeightedQuery::InitRandom(size_t num_points) {
+        input_data_.InitRandom(num_points);
+    }
+
     int WeightedQuery::Run() {
         SL_LOG_DEBUG("Debug");
         SL_LOG_INFO("Info");
@@ -13,5 +17,9 @@ namespace sl { namespace queries {
         SetSeverity("Debug");
         SL_LOG_DEBUG("Debug");
         return 0;
+    }
+
+    void WeightedQuery::Render() {
+        input_data_.Render();
     }
 }}

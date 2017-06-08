@@ -10,9 +10,6 @@ set_project_virtual_folders("${UIS}")
 # #wraper to generate .h files from .qrc files. The new .h files are stored in RESOURCES_HEADERS variable
 # qt5_add_resources(RESOURCES_HEADERS ${RESOURCES})
 
-# OpenGL & GLEW library
-find_package(OpenGL)
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 

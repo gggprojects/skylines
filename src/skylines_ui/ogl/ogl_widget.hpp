@@ -1,29 +1,28 @@
-#ifndef SKYLINES_OGLWIDGET_HPP
-#define SKYLINES_OGLWIDGET_HPP
+#ifndef SKYLINES_OGL_OGLWIDGET_HPP
+#define SKYLINES_OGL_OGLWIDGET_HPP
+
+#include <memory>
 
 #include <QWidget>
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-//#include <QOpenGLBuffer>
-#include <QMatrix4x4>
+
+#include "ogl/camera.hpp"
+#include "common/irenderable.hpp"
 
 namespace sl { namespace ui { namespace ogl {
+
     class OGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
         Q_OBJECT
+
     public:
-        OGLWidget(QWidget *parent = 0);
+        OGLWidget(std::shared_ptr<sl::common::IRenderable> renderable_ptr, QWidget *parent = 0);
         ~OGLWidget();
 
+        int heightForWidth(int w) const override { return w; }
+        QImage GetFrameBufferImage();
     public slots:
-        void SetXRotation(int angle);
-        void SetYRotation(int angle);
-        void SetZRotation(int angle);
         void Cleanup();
-
-    signals:
-        void XRotationChanged(int angle);
-        void YRotationChanged(int angle);
-        void ZRotationChanged(int angle);
 
     protected:
         void initializeGL() override;
@@ -31,17 +30,14 @@ namespace sl { namespace ui { namespace ogl {
         void resizeGL(int width, int height) override;
         void mousePressEvent(QMouseEvent *event) override;
         void mouseMoveEvent(QMouseEvent *event) override;
+        void wheelEvent(QWheelEvent *event) override;
 
     private:
-        int xRot_;
-        int yRot_;
-        int zRot_;
-
         QPoint lastPos_;
 
-        QMatrix4x4 projection_;
-        QMatrix4x4 camera_;
-        QMatrix4x4 world_;
+        OrtographicCamera camera_;
+
+        std::shared_ptr<sl::common::IRenderable> renderable_ptr_;
     };
 }}}
 #endif // SKYLINES_OGLWIDGET_HPP
