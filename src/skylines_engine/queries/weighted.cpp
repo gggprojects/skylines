@@ -6,20 +6,23 @@ namespace sl { namespace queries {
     }
 
     void WeightedQuery::InitRandom(size_t num_points) {
-        input_data_.InitRandom(num_points);
+        input_p_.InitRandom(num_points);
+        input_q_.InitRandom(num_points);
     }
 
     int WeightedQuery::Run() {
-        SL_LOG_DEBUG("Debug");
-        SL_LOG_INFO("Info");
-        SL_LOG_WARN("Warn");
-        SL_LOG_ERROR("Error");
-        SetSeverity("Debug");
-        SL_LOG_DEBUG("Debug");
         return 0;
     }
 
-    void WeightedQuery::Render() {
-        input_data_.Render();
+    void WeightedQuery::Render() const {
+        glColor3f(1, 0, 0);
+        glPointSize(3);
+        input_p_.Render();
+        glColor3f(0, 1, 0);
+        glPointSize(5);
+        input_q_.Render();
+        glColor3f(0, 0, 1);
+        glPointSize(1);
+        output_.Render();
     }
 }}

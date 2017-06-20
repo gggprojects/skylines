@@ -25,7 +25,7 @@ namespace sl { namespace ui {
         connect(ui_->initRandom_PB, &QPushButton::clicked, this, &MainWindow::InitRandom);
         connect(ui_->serialize_input_points_PB, &QPushButton::clicked, this, &MainWindow::SerializeInputPoints);
         connect(ui_->load_input_points_PB, &QPushButton::clicked, this, &MainWindow::LoadInputPoints);
-        connect(ui_->clear_input_points_PB2, &QPushButton::clicked, this, &MainWindow::ClearInputPoints);
+        connect(ui_->clear_PB2, &QPushButton::clicked, this, &MainWindow::Clear);
     }
 
     MainWindow::~MainWindow() {
@@ -53,20 +53,6 @@ namespace sl { namespace ui {
         }
     }
 
-    std::string ToJson(const std::vector<queries::data::Point> &input_points) {
-        rapidjson::StringBuffer sb;
-        rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
-        writer.StartObject();
-        writer.String("points");
-        writer.StartArray();
-        for (const queries::data::Point &p : input_points) {
-            writer.Double(p.x_); writer.Double(p.y_);
-        }
-        writer.EndArray();
-        writer.EndObject();
-        return std::move(std::string(sb.GetString()));
-    }
-
     void ToFile(const std::string &filename, const std::string &json) {
         std::ofstream out(filename);
         out << json;
@@ -75,12 +61,13 @@ namespace sl { namespace ui {
 
     void MainWindow::SerializeInputPoints() {
         QString filename = QFileDialog::getSaveFileName(this, "Save File", qgetenv("HOME"), "json file(*.json)");
+        if (filename.isNull()) return;
+
         if (!filename.endsWith(".json")) {
             filename.append(".json");
         }
 
-        const std::vector<queries::data::Point> &input_points = weighted_query_ptr_->GetInputData().GetPoints();
-        std::string json = ToJson(input_points);
+        std::string json = weighted_query_ptr_->ToJson();
         ToFile(filename.toStdString(), json);
     }
 
@@ -91,27 +78,6 @@ namespace sl { namespace ui {
         return std::move(json_str);
     }
 
-    void ParseJson(const std::string &json_str, std::vector<queries::data::Point> *input_points) {
-        rapidjson::Document document;
-        document.Parse(json_str.c_str());
-
-        if (document.HasParseError()) {
-            return;
-        }
-
-        const rapidjson::Value& array = document["points"];
-        assert(array.IsArray());
-
-        rapidjson::Value::ConstValueIterator it = array.Begin();
-        while (it != array.End()) {
-            float x = static_cast<float>(it->GetDouble());
-            ++it;
-            float y = static_cast<float>(it->GetDouble());
-            ++it;
-            input_points->emplace_back(queries::data::Point(x, y));
-        }
-    }
-
     void MainWindow::LoadInputPoints() {
         QString filename = QFileDialog::getOpenFileName(this, "Open File", qgetenv("HOME"), "json file(*.json)");
         if (filename.isEmpty()) {
@@ -119,14 +85,12 @@ namespace sl { namespace ui {
         }
 
         std::string json_str = ReadAllFile(filename.toStdString());
-        std::vector<queries::data::Point> input_points;
-        ParseJson(json_str, &input_points);
-        weighted_query_ptr_->SetInputData(queries::InputData(std::move(input_points)));
+        weighted_query_ptr_->FromJson(json_str);
         ogl_->update();
     }
 
-    void MainWindow::ClearInputPoints() {
-        weighted_query_ptr_->ClearInputData();
+    void MainWindow::Clear() {
+        weighted_query_ptr_->Clear();
         ogl_->update();
     }
 }}
