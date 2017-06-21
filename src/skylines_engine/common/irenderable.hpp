@@ -9,7 +9,7 @@
 namespace sl { namespace common { 
     class skylines_engine_DLL_EXPORTS IRenderable {
     public:
-        virtual void Render() = 0;
+        virtual void Render() const = 0;
     };
 }}
 

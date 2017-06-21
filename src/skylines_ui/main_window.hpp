@@ -23,7 +23,7 @@ namespace sl { namespace ui {
         void Run();
         void SerializeInputPoints();
         void LoadInputPoints();
-        void ClearInputPoints();
+        void Clear();
 
         Ui::MainWindow *ui_;
         ogl::OGLWidget *ogl_;
