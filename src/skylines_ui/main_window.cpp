@@ -32,8 +32,20 @@ namespace sl { namespace ui {
         delete ui_;
     }
 
+    std::string ReadAllFile(const std::string &filename) {
+        std::ifstream t(filename);
+        std::string json_str((std::istreambuf_iterator<char>(t)),
+            std::istreambuf_iterator<char>());
+        return std::move(json_str);
+    }
+
     void MainWindow::Run() {
+        //debug
+        std::string json_str = ReadAllFile("first_dominated.json");
+        weighted_query_ptr_->FromJson(json_str);
+
         weighted_query_ptr_->Run();
+        ogl_->update();
     }
 
     void MainWindow::InitRandom() {
@@ -69,13 +81,6 @@ namespace sl { namespace ui {
 
         std::string json = weighted_query_ptr_->ToJson();
         ToFile(filename.toStdString(), json);
-    }
-
-    std::string ReadAllFile(std::string filename) {
-        std::ifstream t(filename);
-        std::string json_str((std::istreambuf_iterator<char>(t)),
-            std::istreambuf_iterator<char>());
-        return std::move(json_str);
     }
 
     void MainWindow::LoadInputPoints() {

@@ -40,8 +40,21 @@ namespace sl { namespace queries {
         const std::vector<T> & GetPoints() const { return points_; }
         void Clear() { points_.clear(); }
         void Add(T &&v) { points_.emplace_back(std::move(v)); }
-    private:
+
+    protected:
         std::vector<T> points_;
+    };
+
+    template<class T>
+    class skylines_engine_DLL_EXPORTS NonConstData : public Data<T> {
+    public:
+        std::vector<T> & Points() { return points_; }
+
+        NonConstData& operator=(const Data &other) {
+            points_.clear();
+            points_.assign(other.GetPoints().cbegin(), other.GetPoints().cend());
+            return *this;
+        }
     };
 }}
 #endif // !SLYLINES_QUERIES_INPUT_DATA_HPP

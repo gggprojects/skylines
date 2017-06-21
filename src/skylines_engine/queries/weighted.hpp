@@ -17,6 +17,9 @@ namespace sl { namespace queries {
         void InitRandom(size_t num_points);
         int Run();
         void Render() const final;
+
+    private:
+        void ComputeSkylineSingleThread();
     };
 }}
 #endif // !SKYLINES_QUERIES_WEIGHTED_HPP

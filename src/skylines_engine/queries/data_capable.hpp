@@ -86,10 +86,11 @@ namespace sl { namespace queries {
 
             return std::move(std::string(strbuf.GetString()));
         }
+
     protected:
         Data<data::WeightedPoint> input_p_;
         Data<data::Point> input_q_;
-        Data<data::WeightedPoint> output_;
+        NonConstData<data::WeightedPoint> output_;
     };
 }}
 #endif
