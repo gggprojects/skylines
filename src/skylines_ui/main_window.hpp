@@ -4,19 +4,22 @@
 #include <QMainWindow>
 #include "ogl/ogl_widget.hpp"
 #include "queries/weighted.hpp"
+#include "error/error_handler.hpp"
 
 namespace Ui {
     class MainWindow;
 }
 
 namespace sl { namespace ui {
-    class MainWindow : public QMainWindow {
+    class MainWindow : public QMainWindow, public error::ErrorHandler {
         Q_OBJECT
 
     public:
         explicit MainWindow(QWidget *parent = 0);
         ~MainWindow();
 
+        void UpdateRender();
+        void Render();
     private:
         void InitRandom();
         void SaveImage();
@@ -24,6 +27,10 @@ namespace sl { namespace ui {
         void SerializeInputPoints();
         void LoadInputPoints();
         void Clear();
+
+        void MoveToolToggled();
+        void MouseMoved(int dx, int dy);
+        void PointSelected(int x, int y);
 
         Ui::MainWindow *ui_;
         ogl::OGLWidget *ogl_;

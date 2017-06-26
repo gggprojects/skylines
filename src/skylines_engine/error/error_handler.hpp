@@ -26,6 +26,7 @@ namespace sl { namespace error {
     class skylines_engine_DLL_EXPORTS ErrorHandler {
     public:
         ErrorHandler(const std::string &logger, const std::string &severity, ThreadErrors_ptr thread_errors);
+        ErrorHandler(const std::string &logger, const std::string &severity);
 
         void PushError(ErrorDescriptor_ptr err) {
             thread_errors_->PushError(err);
@@ -58,6 +59,8 @@ namespace sl { namespace error {
         void SetSeverity(std::string severity) {
             log::Logger::SetSeverity(logger_ptr_, severity);
         }
+
+        void SetThreadErrors(ThreadErrors_ptr thread_errors) { thread_errors_ = thread_errors; }
     private:
         ThreadErrors_ptr thread_errors_;
         log::Logger_ptr logger_ptr_;

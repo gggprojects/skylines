@@ -18,6 +18,9 @@ namespace sl { namespace queries {
         int Run();
         void Render() const final;
 
+        size_t GetClosetsPointPosition(const data::Point &point);
+
+        const data::WeightedPoint & GetPoint(size_t pos) { return input_p_.GetPoints()[pos]; }
     private:
         void ComputeSkylineSingleThreadSorting();
     };

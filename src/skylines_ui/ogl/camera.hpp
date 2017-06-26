@@ -1,6 +1,8 @@
 #ifndef SKYLINES_OGL_CAMERA_HPP
 #define SKYLINES_OGL_CAMERA_HPP
+
 #include <QMatrix4x4>
+#include <QVector2D>
 
 namespace sl { namespace ui { namespace ogl {
 
@@ -14,6 +16,9 @@ namespace sl { namespace ui { namespace ogl {
 
         void Move(QVector3D delta);
         virtual void Zoom(float delta) = 0;
+
+        //assumed to be between [(-1,-1), (1, 1)]
+        QVector3D Unproject(const QVector2D &screen_normalized_point);
     protected:
         virtual void UpdateProjectionMatrix() = 0;
         void UpdateViewMatrix();

@@ -4,8 +4,11 @@
 #include "ogl/ogl_widget.hpp"
 
 namespace sl { namespace ui { namespace ogl {
-    OGLWidget::OGLWidget(std::shared_ptr<sl::common::IRenderable> renderable_ptr, QWidget *parent)
-        : QOpenGLWidget(parent), renderable_ptr_(renderable_ptr), cursor_mode_(CursorMode::MOVE) {
+    OGLWidget::OGLWidget(
+        error::ThreadErrors_ptr error_ptr,
+        std::shared_ptr<sl::common::IRenderable> renderable_ptr, QWidget *parent) :
+        error::ErrorHandler("ogl", "info", error_ptr),
+        QOpenGLWidget(parent), renderable_ptr_(renderable_ptr), cursor_mode_(CursorMode::MOVE) {
     }
 
     OGLWidget::~OGLWidget() {
@@ -42,26 +45,29 @@ namespace sl { namespace ui { namespace ogl {
 
     void OGLWidget::mousePressEvent(QMouseEvent *event) {
         lastPos_ = event->pos();
+        switch (cursor_mode_) {
+            case sl::ui::ogl::CursorMode::MOVE: break;
+            case sl::ui::ogl::CursorMode::SELECT:
+                Select(event);
+                break;
+            default:
+                break;
+        }
     }
 
     void OGLWidget::mouseMoveEvent(QMouseEvent *event) {
-        int dx = event->x() - lastPos_.x();
-        int dy = event->y() - lastPos_.y();
-
         switch (cursor_mode_) {
-        case sl::ui::ogl::CursorMode::MOVE:
-            Move(event, dx, dy);
-            break;
-        case sl::ui::ogl::CursorMode::SELECT:
-            //Select(event);
-            break;
-        default:
-            break;
+            case sl::ui::ogl::CursorMode::MOVE:
+                Move(event);
+                break;
+            default:
+                break;
         }
-
     }
 
-    void OGLWidget::Move(QMouseEvent *event, int dx, int dy) {
+    void OGLWidget::Move(QMouseEvent *event) {
+        int dx = event->x() - lastPos_.x();
+        int dy = event->y() - lastPos_.y();
         if (event->buttons() & Qt::LeftButton) {
             QVector4D ortho = camera_.GetOrtographic();
             float right = ortho.y();
@@ -76,6 +82,12 @@ namespace sl { namespace ui { namespace ogl {
             //SetZRotation(zRot_ + 8 * dx);
         }
         lastPos_ = event->pos();
+    }
+
+    void OGLWidget::Select(QMouseEvent *event) {
+        if (event->buttons() & Qt::RightButton) {
+            emit Selected(event->x(), event->y());
+        }
     }
 
     void OGLWidget::wheelEvent(QWheelEvent *event) {
@@ -94,5 +106,30 @@ namespace sl { namespace ui { namespace ogl {
         glBegin(GL_LINES); glVertex2f(0, 0); glVertex2f(0, 1); glEnd();
         glBegin(GL_LINES); glVertex2f(0, 0); glVertex2f(1, 0); glEnd();
         renderable_ptr_->Render();
+
+        emit Painted();
+    }
+
+    void OGLWidget::PaintBisector(const QVector2D &a, const QVector2D &b) {
+        QVector2D m = (a + b) / 2;
+        QVector2D ab_v = b - a;
+        QVector2D ab_v_2(-ab_v.y(), ab_v.x());
+
+        float x1 = -10;
+        float y1 = ((x1 - m.x()) / ab_v_2.x()) * ab_v_2.y() + m.y();
+
+        float x2 = 10;
+        float y2 = ((x2 - m.x()) / ab_v_2.x()) * ab_v_2.y() + m.y();
+
+        glBegin(GL_LINES);
+        glVertex2d(x1, y1);
+        glVertex2d(x2, y2);
+        glEnd();
+    }
+
+    QVector3D OGLWidget::Unproject(const QVector2D &screen_point) {
+        double x = 2.0 * screen_point.x() / 1024 - 1;
+        double y = -2.0 * screen_point.y() / 1024 + 1;
+        return std::move(camera_.Unproject(QVector2D(x, y)));
     }
 }}}

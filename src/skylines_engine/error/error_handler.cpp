@@ -7,5 +7,9 @@ namespace sl { namespace error {
         thread_errors_(thread_errors) {
         logger_ptr_ = log::Logger::AddLogger(logger, severity);
     }
+
+    ErrorHandler::ErrorHandler(const std::string &logger, const std::string &severity) {
+        logger_ptr_ = log::Logger::AddLogger(logger, severity);
+    }
 }}
 

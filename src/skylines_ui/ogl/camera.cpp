@@ -15,6 +15,12 @@ namespace sl { namespace ui { namespace ogl {
         glLoadMatrixf(projection_.data());
     }
 
+    QVector3D Camera::Unproject(const QVector2D &screen_normalized_point) {
+        QMatrix4x4 viewProjection = view_ * projection_;
+        QMatrix4x4 viewProjectionInverse = viewProjection.inverted();
+        QVector3D p(screen_normalized_point.x(), screen_normalized_point.y(), 0);
+        return viewProjectionInverse * p;
+    }
 
     void Camera::UpdateViewMatrix() {
         //We activate the matrix we want to work: modelview
