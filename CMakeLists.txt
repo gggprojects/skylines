@@ -21,12 +21,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(APIS_PATH "$ENV{APIS_PATH_UdG}")
 
 # Boost
-include_directories("${APIS_PATH}/boost-1.60.0/include")
-link_directories("${APIS_PATH}/boost-1.60.0/lib")
+include_directories("${APIS_PATH}/boost-1.64.0/include")
+link_directories("${APIS_PATH}/boost-1.64.0/lib")
 
 # Gtest and GMock
-include_directories("${APIS_PATH}/googletest_with_gmock/include")
-link_directories("${APIS_PATH}/googletest_with_gmock/lib")
+include_directories("${APIS_PATH}/googletest-distribution/include")
+link_directories("${APIS_PATH}/googletest-distribution/lib")
 set(LIBS ${LIBS} gtest gtest_main gmock gmock_main)
 
 # Rapidjson
@@ -47,27 +47,27 @@ find_package(OpenGL)
 if(WIN32)
     set(DEPENDENCY_LIBS_AND_FILES_DEBUG_SPECIFIC
        #gtest
-       "${APIS_PATH}/googletest_with_gmock/bin/Debug/gtest.dll"
-       "${APIS_PATH}/googletest_with_gmock/bin/Debug/gtest_main.dll"
-       "${APIS_PATH}/googletest_with_gmock/bin/Debug/gmock.dll"
-       "${APIS_PATH}/googletest_with_gmock/bin/Debug/gmock_main.dll"
+       "${APIS_PATH}/googletest-distribution/lib/Debug/gtest.dll"
+       "${APIS_PATH}/googletest-distribution/lib/Debug/gtest_main.dll"
+       "${APIS_PATH}/googletest-distribution/lib/Debug/gmock.dll"
+       "${APIS_PATH}/googletest-distribution/lib/Debug/gmock_main.dll"
 
        #qt
-       "C:/Qt/5.9/msvc2015_64/bin/Qt5Cored.dll"
-       "C:/Qt/5.9/msvc2015_64/bin/Qt5Guid.dll"
-       "C:/Qt/5.9/msvc2015_64/bin/Qt5Widgetsd.dll"
+       "C:/Qt/5.9/msvc2017_64/bin/Qt5Cored.dll"
+       "C:/Qt/5.9/msvc2017_64/bin/Qt5Guid.dll"
+       "C:/Qt/5.9/msvc2017_64/bin/Qt5Widgetsd.dll"
     )
     set(DEPENDENCY_LIBS_AND_FILES_RELEASE_SPECIFIC
        #gtest
-       "${APIS_PATH}/googletest_with_gmock/bin/Release/gtest.dll"
-       "${APIS_PATH}/googletest_with_gmock/bin/Release/gtest_main.dll"
-       "${APIS_PATH}/googletest_with_gmock/bin/Release/gmock.dll"
-       "${APIS_PATH}/googletest_with_gmock/bin/Release/gmock_main.dll"
+       "${APIS_PATH}/googletest-distribution/lib/Release/gtest.dll"
+       "${APIS_PATH}/googletest-distribution/lib/Release/gtest_main.dll"
+       "${APIS_PATH}/googletest-distribution/lib/Release/gmock.dll"
+       "${APIS_PATH}/googletest-distribution/lib/Release/gmock_main.dll"
 
        #qt
-       "C:/Qt/5.9/msvc2015_64/bin/Qt5Core.dll"
-       "C:/Qt/5.9/msvc2015_64/bin/Qt5Gui.dll"
-       "C:/Qt/5.9/msvc2015_64/bin/Qt5Widgets.dll"
+       "C:/Qt/5.9/msvc2017_64/bin/Qt5Core.dll"
+       "C:/Qt/5.9/msvc2017_64/bin/Qt5Gui.dll"
+       "C:/Qt/5.9/msvc2017_64/bin/Qt5Widgets.dll"
     )
 endif()
 

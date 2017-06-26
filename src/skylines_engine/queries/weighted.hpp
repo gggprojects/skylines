@@ -14,12 +14,15 @@ namespace sl { namespace queries {
     public:
         WeightedQuery(error::ThreadErrors_ptr error_ptr);
 
-        void InitRandom(size_t num_points);
+        void InitRandom(size_t num_points_p, size_t num_points_q);
         int Run();
         void Render() const final;
 
+        size_t GetClosetsPointPosition(const data::Point &point);
+
+        const data::WeightedPoint & GetPoint(size_t pos) { return input_p_.GetPoints()[pos]; }
     private:
-        void ComputeSkylineSingleThread();
+        void ComputeSkylineSingleThreadSorting();
     };
 }}
 #endif // !SKYLINES_QUERIES_WEIGHTED_HPP
