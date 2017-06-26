@@ -13,15 +13,15 @@ namespace sl { namespace queries {namespace data {
         virtual float Distance(const Point &other) const = 0;
         virtual float SquaredDistance(const Point &other) const = 0;
 
-        bool IsDominated(const T &other, const std::vector<Point> &q) {
+        bool IsDominated(const T &other, const std::vector<Point> &q) const {
             for (const Point p_q : q) {
                 float distance = this->Distance(p_q);
                 float other_distance = other.Distance(p_q);
-                if (other_distance < distance) {
-                    return true;
+                if (distance <= other_distance) {
+                    return false;
                 }
             }
-            return false;
+            return true;
         }
     };
 
@@ -52,7 +52,10 @@ namespace sl { namespace queries {namespace data {
 
     struct WeightedPoint : public common::IRenderable, Dominable<WeightedPoint> {
 
-        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), r.Next()) {
+        //WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), r.Next()) {
+        //}
+
+        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1) {
         }
 
         WeightedPoint(const Point &point, float weight) :
@@ -75,7 +78,7 @@ namespace sl { namespace queries {namespace data {
         }
 
         float SquaredDistance(const Point &other) const final {
-            return point_.SquaredDistance(point_) * weight_;
+            return point_.SquaredDistance(other) * weight_;
         }
 
         Point point_;

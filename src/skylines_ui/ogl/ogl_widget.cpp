@@ -5,7 +5,7 @@
 
 namespace sl { namespace ui { namespace ogl {
     OGLWidget::OGLWidget(std::shared_ptr<sl::common::IRenderable> renderable_ptr, QWidget *parent)
-        : QOpenGLWidget(parent), renderable_ptr_(renderable_ptr) {
+        : QOpenGLWidget(parent), renderable_ptr_(renderable_ptr), cursor_mode_(CursorMode::MOVE) {
     }
 
     OGLWidget::~OGLWidget() {
@@ -48,6 +48,20 @@ namespace sl { namespace ui { namespace ogl {
         int dx = event->x() - lastPos_.x();
         int dy = event->y() - lastPos_.y();
 
+        switch (cursor_mode_) {
+        case sl::ui::ogl::CursorMode::MOVE:
+            Move(event, dx, dy);
+            break;
+        case sl::ui::ogl::CursorMode::SELECT:
+            //Select(event);
+            break;
+        default:
+            break;
+        }
+
+    }
+
+    void OGLWidget::Move(QMouseEvent *event, int dx, int dy) {
         if (event->buttons() & Qt::LeftButton) {
             QVector4D ortho = camera_.GetOrtographic();
             float right = ortho.y();

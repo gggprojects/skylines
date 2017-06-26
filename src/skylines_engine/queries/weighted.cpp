@@ -7,9 +7,9 @@ namespace sl { namespace queries {
         SkylineElement("WeightedQuery", "info", error_ptr) {
     }
 
-    void WeightedQuery::InitRandom(size_t num_points) {
-        input_p_.InitRandom(num_points);
-        input_q_.InitRandom(num_points);
+    void WeightedQuery::InitRandom(size_t num_points_p, size_t num_points_q) {
+        input_p_.InitRandom(num_points_p);
+        input_q_.InitRandom(num_points_q);
     }
 
     void WeightedQuery::Render() const {
@@ -25,34 +25,39 @@ namespace sl { namespace queries {
     }
 
     int WeightedQuery::Run() {
-        //inititally all p are skylines
-        output_ = input_p_;
+        if (input_p_.GetPoints().empty()) return 0;
+        if (input_q_.GetPoints().empty()) return 0;
 
-        ComputeSkylineSingleThread();
+        ComputeSkylineSingleThreadSorting();
         return 0;
     }
 
-    void WeightedQuery::ComputeSkylineSingleThread() {
-        std::vector<data::WeightedPoint>::iterator it_i = output_.Points().begin();
-        if (it_i == output_.Points().end()) return;
+    void WeightedQuery::ComputeSkylineSingleThreadSorting() {
+        //copy P
+        NonConstData<data::WeightedPoint> sorted_input;
+        sorted_input = input_p_;
 
-        while(it_i + 1 != output_.Points().end()) { //not the last point
-            std::vector<data::WeightedPoint>::iterator it_j = it_i + 1; //next point
+        // sort by the first point in Q
+        const data::Point &first_q = input_q_.GetPoints()[0];
+        std::sort(sorted_input.Points().begin(), sorted_input.Points().end(), [&first_q](const data::WeightedPoint &a, const data::WeightedPoint &b) {
+            return a.SquaredDistance(first_q) < b.SquaredDistance(first_q);
+        });
+
+        //the first element is skyline
+        output_.Add(sorted_input.GetPoints()[0]);
+
+        for(std::vector<data::WeightedPoint>::const_iterator skyline_candidate = sorted_input.GetPoints().cbegin() + 1; skyline_candidate != sorted_input.GetPoints().cend(); ++skyline_candidate) {
+            std::vector<data::WeightedPoint>::const_reverse_iterator skyline_element = output_.GetPoints().crbegin();
             bool is_skyline = true;
-            while (it_j != output_.Points().end()) {
-                if (it_i->IsDominated(*it_j, input_q_.GetPoints())) {
-                    /*
-                    if it_i is dominated by it_j --> it_i will never be skyline. So we remove it from future comparisions
-                    */
-                    it_i = output_.Points().erase(it_i);
-                    it_j = output_.Points().end(); // force exit
+            while (is_skyline && skyline_element != output_.Points().rend()) {
+                if (skyline_candidate->IsDominated(*skyline_element, input_q_.GetPoints())) {
                     is_skyline = false;
                 } else {
-                    ++it_j;
+                    skyline_element++;
                 }
             }
             if (is_skyline) {
-                ++it_i;
+                output_.Add(*skyline_candidate);
             }
         }
     }

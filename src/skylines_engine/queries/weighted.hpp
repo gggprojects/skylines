@@ -14,12 +14,12 @@ namespace sl { namespace queries {
     public:
         WeightedQuery(error::ThreadErrors_ptr error_ptr);
 
-        void InitRandom(size_t num_points);
+        void InitRandom(size_t num_points_p, size_t num_points_q);
         int Run();
         void Render() const final;
 
     private:
-        void ComputeSkylineSingleThread();
+        void ComputeSkylineSingleThreadSorting();
     };
 }}
 #endif // !SKYLINES_QUERIES_WEIGHTED_HPP

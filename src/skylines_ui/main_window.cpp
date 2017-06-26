@@ -40,16 +40,16 @@ namespace sl { namespace ui {
     }
 
     void MainWindow::Run() {
-        //debug
-        std::string json_str = ReadAllFile("first_dominated.json");
-        weighted_query_ptr_->FromJson(json_str);
+        ////debug
+        //std::string json_str = ReadAllFile("first_dominated.json");
+        //weighted_query_ptr_->FromJson(json_str);
 
         weighted_query_ptr_->Run();
         ogl_->update();
     }
 
     void MainWindow::InitRandom() {
-        weighted_query_ptr_->InitRandom(10);
+        weighted_query_ptr_->InitRandom(static_cast<size_t>(ui_->spinBox_P->value()), static_cast<size_t>(ui_->spinBox_Q->value()));
         ogl_->update();
     }
 

@@ -40,6 +40,7 @@ namespace sl { namespace queries {
         const std::vector<T> & GetPoints() const { return points_; }
         void Clear() { points_.clear(); }
         void Add(T &&v) { points_.emplace_back(std::move(v)); }
+        void Add(const T &v) { points_.push_back(v); }
 
     protected:
         std::vector<T> points_;

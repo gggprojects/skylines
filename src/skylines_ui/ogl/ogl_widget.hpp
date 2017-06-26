@@ -12,6 +12,11 @@
 
 namespace sl { namespace ui { namespace ogl {
 
+    enum class CursorMode {
+        MOVE,
+        SELECT
+    };
+
     class OGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
         Q_OBJECT
 
@@ -31,13 +36,14 @@ namespace sl { namespace ui { namespace ogl {
         void mousePressEvent(QMouseEvent *event) override;
         void mouseMoveEvent(QMouseEvent *event) override;
         void wheelEvent(QWheelEvent *event) override;
-
+        void Move(QMouseEvent *event, int dx, int dy);
     private:
         QPoint lastPos_;
 
         OrtographicCamera camera_;
 
         std::shared_ptr<sl::common::IRenderable> renderable_ptr_;
+        CursorMode cursor_mode_;
     };
 }}}
 #endif // SKYLINES_OGLWIDGET_HPP
