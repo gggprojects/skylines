@@ -2,6 +2,8 @@
 #define SKYLINES_MAINWINDOW_HPP
 
 #include <QMainWindow>
+#include <QListWidgetItem>
+
 #include "ogl/ogl_widget.hpp"
 #include "queries/weighted.hpp"
 #include "error/error_handler.hpp"
@@ -28,9 +30,10 @@ namespace sl { namespace ui {
         void LoadInputPoints();
         void Clear();
 
-        void MoveToolToggled();
         void MouseMoved(int dx, int dy);
         void PointSelected(int x, int y);
+
+        void RemoveSelectedPoint(QListWidgetItem *item);
 
         Ui::MainWindow *ui_;
         ogl::OGLWidget *ogl_;

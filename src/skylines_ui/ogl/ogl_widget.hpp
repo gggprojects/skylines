@@ -53,8 +53,7 @@ namespace sl { namespace ui { namespace ogl {
         void mousePressEvent(QMouseEvent *event) override;
         void mouseMoveEvent(QMouseEvent *event) override;
         void wheelEvent(QWheelEvent *event) override;
-        void Move(QMouseEvent *event);
-        void Select(QMouseEvent *event);
+
     private:
         QPoint lastPos_;
 

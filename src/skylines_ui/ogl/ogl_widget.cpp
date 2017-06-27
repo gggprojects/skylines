@@ -45,27 +45,13 @@ namespace sl { namespace ui { namespace ogl {
 
     void OGLWidget::mousePressEvent(QMouseEvent *event) {
         lastPos_ = event->pos();
-        switch (cursor_mode_) {
-            case sl::ui::ogl::CursorMode::MOVE: break;
-            case sl::ui::ogl::CursorMode::SELECT:
-                Select(event);
-                break;
-            default:
-                break;
+
+        if (event->buttons() & Qt::RightButton) {
+            emit Selected(event->x(), event->y());
         }
     }
 
     void OGLWidget::mouseMoveEvent(QMouseEvent *event) {
-        switch (cursor_mode_) {
-            case sl::ui::ogl::CursorMode::MOVE:
-                Move(event);
-                break;
-            default:
-                break;
-        }
-    }
-
-    void OGLWidget::Move(QMouseEvent *event) {
         int dx = event->x() - lastPos_.x();
         int dy = event->y() - lastPos_.y();
         if (event->buttons() & Qt::LeftButton) {
@@ -78,16 +64,9 @@ namespace sl { namespace ui { namespace ogl {
             camera_.Move(movement);
             update();
         } else if (event->buttons() & Qt::RightButton) {
-            //SetXRotation(xRot_ + 8 * dy);
-            //SetZRotation(zRot_ + 8 * dx);
+            
         }
         lastPos_ = event->pos();
-    }
-
-    void OGLWidget::Select(QMouseEvent *event) {
-        if (event->buttons() & Qt::RightButton) {
-            emit Selected(event->x(), event->y());
-        }
     }
 
     void OGLWidget::wheelEvent(QWheelEvent *event) {
