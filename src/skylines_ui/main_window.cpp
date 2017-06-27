@@ -31,12 +31,11 @@ namespace sl { namespace ui {
         connect(ui_->serialize_input_points_PB, &QPushButton::clicked, this, &MainWindow::SerializeInputPoints);
         connect(ui_->load_input_points_PB, &QPushButton::clicked, this, &MainWindow::LoadInputPoints);
         connect(ui_->clear_PB2, &QPushButton::clicked, this, &MainWindow::Clear);
-        connect(ui_->radioButton_Move, &QRadioButton::toggled, this, &MainWindow::MoveToolToggled);
         connect(ogl_, &ogl::OGLWidget::Moved, this, &MainWindow::MouseMoved);
         connect(ogl_, &ogl::OGLWidget::Selected, this, &MainWindow::PointSelected);
         connect(ogl_, &ogl::OGLWidget::Painted, this, &MainWindow::Render);
         connect(ui_->listWidget_points, &QListWidget::itemSelectionChanged, this, &MainWindow::UpdateRender);
-        //connect(ui_->listWidget_points, &QListWidget::currentItemChanged, this, &MainWindow::UpdateRender);
+        connect(ui_->listWidget_points, &QListWidget::itemDoubleClicked, this, &MainWindow::RemoveSelectedPoint);
     }
 
     MainWindow::~MainWindow() {
@@ -110,10 +109,6 @@ namespace sl { namespace ui {
         ogl_->update();
     }
 
-    void MainWindow::MoveToolToggled() {
-        ogl_->SetCursorMode(ui_->radioButton_Move->isChecked() ? ogl::CursorMode::MOVE : ogl::CursorMode::SELECT);
-    }
-
     void MainWindow::MouseMoved(int dx, int dy) {
         //SL_LOG_INFO(std::to_string(dx) + "," + std::to_string(dy));
     }
@@ -122,6 +117,11 @@ namespace sl { namespace ui {
         QVector3D projected_point = ogl_->Unproject(QVector2D(x, y));
         size_t input_point_position = weighted_query_ptr_->GetClosetsPointPosition(queries::data::Point(projected_point.x(), projected_point.y()));
         ui_->listWidget_points->addItem(QString::fromStdString(std::to_string(input_point_position)));
+        ogl_->update();
+    }
+
+    void MainWindow::RemoveSelectedPoint(QListWidgetItem *item) {
+        delete item;
     }
 
     void MainWindow::UpdateRender() {
@@ -129,10 +129,9 @@ namespace sl { namespace ui {
     }
 
     void MainWindow::Render() {
-        //render selected points
-        QList<QListWidgetItem*> items = ui_->listWidget_points->selectedItems();
-        for (const QListWidgetItem* item : items) {
-            size_t position = item->text().toULong();
+        //render added points
+        for (int i = 0; i < ui_->listWidget_points->count(); ++i) {
+            size_t position = ui_->listWidget_points->item(i)->text().toULong();
             const queries::data::WeightedPoint &wp = weighted_query_ptr_->GetPoint(position);
             glColor3f(0, 1, 1);
             glPointSize(9);
@@ -140,6 +139,9 @@ namespace sl { namespace ui {
             glVertex2f(wp.point_.x_, wp.point_.y_);
             glEnd();
         }
+
+        //render bisectors
+        QList<QListWidgetItem*> items = ui_->listWidget_points->selectedItems();
         for (int i = 0; i < items.size() - 1; i++) {
             size_t a_pos = items[i]->text().toULong();
             size_t b_pos = items[i + 1]->text().toULong();
