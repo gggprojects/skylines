@@ -12,7 +12,7 @@ namespace Ui {
     class MainWindow;
 }
 
-namespace sl { namespace ui {
+namespace sl { namespace ui { namespace main_window {
     class MainWindow : public QMainWindow, public error::ErrorHandler {
         Q_OBJECT
 
@@ -41,5 +41,5 @@ namespace sl { namespace ui {
         sl::error::ThreadErrors_ptr thread_errors_ptr_;
         std::shared_ptr<sl::queries::WeightedQuery> weighted_query_ptr_;
     };
-}}
+}}}
 #endif // SKYLINES_MAINWINDOW_HPP

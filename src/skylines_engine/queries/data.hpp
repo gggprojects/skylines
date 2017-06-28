@@ -6,8 +6,12 @@
 #include "queries/data/data_structures.hpp"
 
 namespace sl { namespace queries {
+
+    class DataCapable;
+
     template<class T>
     class skylines_engine_DLL_EXPORTS Data : public common::IRenderable {
+        friend class DataCapable;
     public:
         Data() {}
 
@@ -42,6 +46,9 @@ namespace sl { namespace queries {
         void Add(T &&v) { points_.emplace_back(std::move(v)); }
         void Add(const T &v) { points_.push_back(v); }
 
+        T* GetDataPointer() { return &points_[0]; }
+
+        void Resize(size_t new_size) { points_.resize(new_size); }
     protected:
         std::vector<T> points_;
     };
