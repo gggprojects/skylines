@@ -18,74 +18,23 @@ namespace sl { namespace queries {
             output_.Clear();
         }
 
-        bool FromJson(const std::string &json_str) {
-            rapidjson::Document document;
-            document.Parse(json_str.c_str());
+        bool FromFile(const std::string &filename);
+        bool ToFile(const std::string &filename);
 
-            if (document.HasParseError()) {
-                return false;
-            }
+        size_t GetClosetsPointPosition(const data::Point &point);
 
-            if (!document.IsObject()) return false;
-            if (!document.HasMember("P")) return false;
-            if (!document.HasMember("Q")) return false;
-            if (!document["P"].IsArray()) return false;
-            if (!document["Q"].IsArray()) return false;
+        const Data<data::WeightedPoint> & GetInputP() const { return input_p_; }
+        const Data<data::Point> & GetInputQ() const { return input_q_; }
 
-            const rapidjson::Value& p = document["P"];
-            for (rapidjson::SizeType i = 0; i < p.Size(); i++) {
-                float x = p[i]["x"].GetFloat();
-                float y = p[i]["y"].GetFloat();
-                float weight = p[i]["w"].GetFloat();
-                input_p_.Add(data::WeightedPoint(data::Point(x, y), weight));
-            }
+    private:
+        bool ReadJsonFile(const std::string &filename);
+        bool ReadBinaryFile(const std::string &filename);
 
-            const rapidjson::Value& q = document["Q"];
-            for (rapidjson::SizeType i = 0; i < q.Size(); i++) {
-                float x = q[i]["x"].GetFloat();
-                float y = q[i]["y"].GetFloat();
-                input_q_.Add(data::Point(x, y));
+        bool WriteJsonFile(const std::string &filename);
+        bool WriteBinaryFile(const std::string &filename);
 
-            }
-            return true;
-        }
-
-        std::string ToJson() {
-            rapidjson::Document document;
-
-            // define the document as an object rather than an array
-            document.SetObject();
-
-            // must pass an allocator when the object may need to allocate memory
-            rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
-
-            //P
-            rapidjson::Value wp_array(rapidjson::kArrayType);
-            for (const data::WeightedPoint &wp : input_p_.GetPoints()) {
-                rapidjson::Value wp_object(rapidjson::kObjectType);
-                wp_object.AddMember("x", wp.point_.x_, allocator);
-                wp_object.AddMember("y", wp.point_.y_, allocator);
-                wp_object.AddMember("w", wp.weight_, allocator);
-                wp_array.PushBack(wp_object, allocator);
-            }
-            document.AddMember("P", wp_array, allocator);
-
-            //Q
-            rapidjson::Value p_array(rapidjson::kArrayType);
-            for (const data::Point &p : input_q_.GetPoints()) {
-                rapidjson::Value p_object(rapidjson::kObjectType);
-                p_object.AddMember("x", p.x_, allocator);
-                p_object.AddMember("y", p.y_, allocator);
-                p_array.PushBack(p_object, allocator);
-            }
-            document.AddMember("Q", p_array, allocator);
-
-            rapidjson::StringBuffer strbuf;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
-            document.Accept(writer);
-
-            return std::move(std::string(strbuf.GetString()));
-        }
+        bool FromJson(const std::string &json_str);
+        std::string ToJson();
 
     protected:
         Data<data::WeightedPoint> input_p_;

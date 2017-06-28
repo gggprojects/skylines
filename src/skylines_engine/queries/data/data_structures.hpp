@@ -27,6 +27,8 @@ namespace sl { namespace queries {namespace data {
 
     struct Point : public common::IRenderable, Dominable<Point> {
 
+        Point() {}
+
         //random initializer
         Point(data::UniformRealRandomGenerator &r) : Point(r.Next(), r.Next()) {
         }
@@ -52,8 +54,7 @@ namespace sl { namespace queries {namespace data {
 
     struct WeightedPoint : public common::IRenderable, Dominable<WeightedPoint> {
 
-        //WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), r.Next()) {
-        //}
+        WeightedPoint() {}
 
         WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1) {
         }

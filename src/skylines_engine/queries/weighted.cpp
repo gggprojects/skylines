@@ -26,11 +26,15 @@ namespace sl { namespace queries {
         output_.Render();
     }
 
-    int WeightedQuery::Run() {
+    int WeightedQuery::RunSingleThreadSorting() {
         if (input_p_.GetPoints().empty()) return 0;
         if (input_q_.GetPoints().empty()) return 0;
 
         ComputeSkylineSingleThreadSorting();
+        return 0;
+    }
+
+    int WeightedQuery::RunSingleFB() {
         return 0;
     }
 
@@ -62,18 +66,5 @@ namespace sl { namespace queries {
                 output_.Add(*skyline_candidate);
             }
         }
-    }
-
-    size_t WeightedQuery::GetClosetsPointPosition(const data::Point &point) {
-        float min_distance = std::pow(2, 2) + std::pow(2, 2);
-        size_t closest_one = 0;
-        for (size_t i = 0; i < input_p_.GetPoints().size(); i++) {
-            float d = input_p_.GetPoints()[i].SquaredDistance(point);
-            if (d < min_distance) {
-                closest_one = i;
-                min_distance = d;
-            }
-        }
-        return closest_one;
     }
 }}

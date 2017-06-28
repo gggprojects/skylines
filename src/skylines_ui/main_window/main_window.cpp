@@ -14,7 +14,7 @@
 #include "ui_main_window.h"
 #include "queries/data/data_structures.hpp"
 
-namespace sl { namespace ui {
+namespace sl { namespace ui { namespace main_window {
     MainWindow::MainWindow(QWidget *parent) :
         error::ErrorHandler("ui", "info"),
         QMainWindow(parent),
@@ -42,19 +42,12 @@ namespace sl { namespace ui {
         delete ui_;
     }
 
-    std::string ReadAllFile(const std::string &filename) {
-        std::ifstream t(filename);
-        std::string json_str((std::istreambuf_iterator<char>(t)),
-            std::istreambuf_iterator<char>());
-        return std::move(json_str);
-    }
-
     void MainWindow::Run() {
         ////debug
         //std::string json_str = ReadAllFile("first_dominated.json");
         //weighted_query_ptr_->FromJson(json_str);
 
-        weighted_query_ptr_->Run();
+        weighted_query_ptr_->RunSingleThreadSorting();
         ogl_->update();
     }
 
@@ -75,32 +68,35 @@ namespace sl { namespace ui {
         }
     }
 
-    void ToFile(const std::string &filename, const std::string &json) {
-        std::ofstream out(filename);
-        out << json;
-        out.close();
-    }
-
     void MainWindow::SerializeInputPoints() {
-        QString filename = QFileDialog::getSaveFileName(this, "Save File", qgetenv("HOME"), "json file(*.json)");
+        QString filename = QFileDialog::getSaveFileName(this, "Save File", qgetenv("HOME"), "Input File(*.json *.bin)");
         if (filename.isNull()) return;
 
-        if (!filename.endsWith(".json")) {
-            filename.append(".json");
+        if (!filename.endsWith(".json") && !filename.endsWith(".bin")) {
+            QMessageBox::warning(this, "Incorrect extension", "Incorrect extension");
+            return;
         }
 
-        std::string json = weighted_query_ptr_->ToJson();
-        ToFile(filename.toStdString(), json);
+        if (!weighted_query_ptr_->ToFile(filename.toStdString())) {
+            QMessageBox::warning(this, "Error when serializing points", "Error when serializing points");
+        }
     }
 
     void MainWindow::LoadInputPoints() {
-        QString filename = QFileDialog::getOpenFileName(this, "Open File", qgetenv("HOME"), "json file(*.json)");
+        QString filename = QFileDialog::getOpenFileName(this, "Open File", qgetenv("HOME"), "json file(*.json *.bin)");
         if (filename.isEmpty()) {
             return;
         }
 
-        std::string json_str = ReadAllFile(filename.toStdString());
-        weighted_query_ptr_->FromJson(json_str);
+        if (!filename.endsWith(".json") && !filename.endsWith(".bin")) {
+            QMessageBox::warning(this, "Incorrect extension", "Incorrect extension");
+            return;
+        }
+
+        if (!weighted_query_ptr_->FromFile(filename.toStdString())) {
+            QMessageBox::warning(this, "Error at loading points", "Error at loading points");
+        }
+
         ogl_->update();
     }
 
@@ -132,7 +128,7 @@ namespace sl { namespace ui {
         //render added points
         for (int i = 0; i < ui_->listWidget_points->count(); ++i) {
             size_t position = ui_->listWidget_points->item(i)->text().toULong();
-            const queries::data::WeightedPoint &wp = weighted_query_ptr_->GetPoint(position);
+            const queries::data::WeightedPoint &wp = weighted_query_ptr_->GetInputP().GetPoints()[position];
             glColor3f(0, 1, 1);
             glPointSize(9);
             glBegin(GL_POINTS);
@@ -145,9 +141,9 @@ namespace sl { namespace ui {
         for (int i = 0; i < items.size() - 1; i++) {
             size_t a_pos = items[i]->text().toULong();
             size_t b_pos = items[i + 1]->text().toULong();
-            const queries::data::WeightedPoint &wp_a = weighted_query_ptr_->GetPoint(a_pos);
-            const queries::data::WeightedPoint &wp_b = weighted_query_ptr_->GetPoint(b_pos);
+            const queries::data::WeightedPoint &wp_a = weighted_query_ptr_->GetInputP().GetPoints()[a_pos];
+            const queries::data::WeightedPoint &wp_b = weighted_query_ptr_->GetInputP().GetPoints()[b_pos];
             ogl_->PaintBisector(QVector2D(wp_a.point_.x_, wp_a.point_.y_), QVector2D(wp_b.point_.x_, wp_b.point_.y_));
         }
     }
-}}
+}}}

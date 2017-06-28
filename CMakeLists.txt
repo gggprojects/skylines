@@ -10,6 +10,8 @@ enable_testing()
 # Avoid minRelSize/RelWithDebugInfo configurations
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 # Cmake Inclusions
 include(cmake/util.cmake)
 
@@ -29,6 +31,11 @@ include_directories("${APIS_PATH}/googletest-distribution/include")
 link_directories("${APIS_PATH}/googletest-distribution/lib")
 set(LIBS ${LIBS} gtest gtest_main gmock gmock_main)
 
+# Celero
+include_directories("${APIS_PATH}/celero-master/include")
+link_directories("${APIS_PATH}/celero-master/lib")
+set(LIBS ${LIBS} debug celerod optimized celero)
+
 # Rapidjson
 include_directories("${APIS_PATH}/rapidjson-master/include")
 
@@ -43,6 +50,8 @@ find_package(Qt5Core)
 # OpenGL & GLEW library
 find_package(OpenGL)
 
+include_directories(${Qt5Widgets_INCLUDE_DIRS})
+
 #dll post copy depencies. Debug purposes. In Linux we use stow
 if(WIN32)
     set(DEPENDENCY_LIBS_AND_FILES_DEBUG_SPECIFIC
@@ -56,6 +65,9 @@ if(WIN32)
        "C:/Qt/5.9/msvc2017_64/bin/Qt5Cored.dll"
        "C:/Qt/5.9/msvc2017_64/bin/Qt5Guid.dll"
        "C:/Qt/5.9/msvc2017_64/bin/Qt5Widgetsd.dll"
+
+       #celero
+       "${APIS_PATH}/celero-master/bin/celerod.dll"
     )
     set(DEPENDENCY_LIBS_AND_FILES_RELEASE_SPECIFIC
        #gtest
@@ -68,6 +80,9 @@ if(WIN32)
        "C:/Qt/5.9/msvc2017_64/bin/Qt5Core.dll"
        "C:/Qt/5.9/msvc2017_64/bin/Qt5Gui.dll"
        "C:/Qt/5.9/msvc2017_64/bin/Qt5Widgets.dll"
+
+       #celero
+       "${APIS_PATH}/celero-master/bin/celero.dll"
     )
 endif()
 
@@ -78,18 +93,14 @@ endif()
 
 
 # Projects
-include_directories(src)
 add_subdirectory(src)
+add_subdirectory(benchmarks)
 
 # #testing
 # option(BUILD_AUTOMATIC_TESTS "Build automatic tests" ON)
 # if(BUILD_AUTOMATIC_TESTS)
-    # add_subdirectory(tests/unit)
-    # add_subdirectory(tests/blackbox)
-    # add_subdirectory(tests/benchmark)
-# endif()
-# option(BUILD_MANUAL_TESTS "Build manual tests" ON)
-# if(BUILD_MANUAL_TESTS)
-    # add_subdirectory(tests/smoke)
+    # # add_subdirectory(tests/unit)
+    # #add_subdirectory(tests/blackbox)
+    # # add_subdirectory(tests/benchmark)
 # endif()
 
