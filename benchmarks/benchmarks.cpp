@@ -10,23 +10,16 @@
 sl::queries::WeightedQuery wq(sl::error::ThreadsErrors::Instanciate());
 std::map<int64_t, std::string> experiment_value_filename_map;
 
+void GenerateFile(size_t input_p_size, size_t input_q_size) {
+    wq.InitRandom(input_p_size, input_q_size);
+    std::string filename = std::to_string(input_p_size) + "x" + std::to_string(input_q_size) + ".bin";
+    wq.ToFile(experiment_value_filename_map.insert(std::pair<int64_t, std::string>(experiment_value_filename_map.size(), filename)).first->second);
+}
+
 void GenerateFiles() {
-    experiment_value_filename_map.insert(std::pair<int64_t, std::string>(0, "10x1000.bin"));
-    experiment_value_filename_map.insert(std::pair<int64_t, std::string>(1, "10x10000.bin"));
-    experiment_value_filename_map.insert(std::pair<int64_t, std::string>(2, "1000x10.bin"));
-    experiment_value_filename_map.insert(std::pair<int64_t, std::string>(3, "10000x10.bin"));
-
-    wq.InitRandom(10, 1000);
-    wq.ToFile(experiment_value_filename_map[0]);
-
-    wq.InitRandom(10, 10000);
-    wq.ToFile(experiment_value_filename_map[1]);
-
-    wq.InitRandom(1000, 100);
-    wq.ToFile(experiment_value_filename_map[2]);
-
-    wq.InitRandom(10000, 10);
-    wq.ToFile(experiment_value_filename_map[3]);
+    GenerateFile(500, 10);
+    GenerateFile(1000, 10);
+    GenerateFile(10000, 10);
 }
 
 int main(int argc, char** argv) {
@@ -43,10 +36,10 @@ public:
 
     virtual std::vector<std::pair<int64_t, uint64_t>> getExperimentValues() const override {
         std::vector<std::pair<int64_t, uint64_t>> problemSpace;
-        problemSpace.push_back(std::make_pair(0, 1000));
-        problemSpace.push_back(std::make_pair(1, 1000));
-        problemSpace.push_back(std::make_pair(2, 10));
-        problemSpace.push_back(std::make_pair(3, 4));
+
+        for (const std::pair<int64_t, std::string> &kvp : experiment_value_filename_map) {
+            problemSpace.push_back(std::make_pair(kvp.first, 5));
+        }
         return problemSpace;
     }
 
