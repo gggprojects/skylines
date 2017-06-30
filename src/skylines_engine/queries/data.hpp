@@ -1,6 +1,8 @@
 #ifndef SLYLINES_QUERIES_INPUT_DATA_HPP
 #define SLYLINES_QUERIES_INPUT_DATA_HPP
 
+#include <mutex>
+
 #include "export_import.hpp"
 #include "common/irenderable.hpp"
 #include "queries/data/data_structures.hpp"
@@ -45,17 +47,32 @@ namespace sl { namespace queries {
         void Clear() { points_.clear(); }
         void Add(T &&v) { points_.emplace_back(std::move(v)); }
         void Add(const T &v) { points_.push_back(v); }
+        void SafetyAdd(const T &v) {
+            std::lock_guard<std::mutex> lock(output_mutex_);
+            points_.push_back(v);
+        }
 
         T* GetDataPointer() { return &points_[0]; }
 
         void Resize(size_t new_size) { points_.resize(new_size); }
     protected:
+        std::mutex output_mutex_;
         std::vector<T> points_;
     };
 
     template<class T>
     class skylines_engine_DLL_EXPORTS NonConstData : public Data<T> {
     public:
+        NonConstData & operator=(const NonConstData &other) {
+            points_.assign(other.points_.begin(), other.points_.end());
+            return *this;
+        }
+        //NonConstData() {}
+
+        //NonConstData(const NonConstData<T> &other) {
+        //    //points_.assign(other.GetPoints().begin(), other.GetPoints().end());
+        //}
+
         std::vector<T> & Points() { return points_; }
 
         NonConstData& operator=(const Data &other) {

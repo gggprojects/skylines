@@ -15,12 +15,25 @@ namespace sl { namespace queries {
         WeightedQuery(error::ThreadErrors_ptr error_ptr);
 
         void InitRandom(size_t num_points_p, size_t num_points_q);
-        int RunSingleThreadSorting();
-        int RunSingleFB();
+        void RunSingleThreadBruteForce();
+        void RunSingleThreadBruteForceDiscarting();
+        void RunSingleThreadSorting();
+        void RunMultiThreadBruteForce();
+        void RunGPUBruteForce();
+
         void Render() const final;
 
     private:
+        bool IsEmpty();
+        bool Init();
         void ComputeSkylineSingleThreadSorting();
+        void ComputeSingleThreadBruteForce();
+        void ComputeSingleThreadBruteForceDiscarting();
+        void ComputeMultiThreadBruteForce();
+        void ComputeSingleThreadBruteForce(
+            std::vector<data::WeightedPoint>::const_iterator first_skyline_candidate,
+            std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate);
+        void ComputeGPUBruteForce();
     };
 }}
 #endif // !SKYLINES_QUERIES_WEIGHTED_HPP

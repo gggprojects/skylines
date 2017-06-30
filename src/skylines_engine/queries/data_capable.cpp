@@ -74,6 +74,7 @@ namespace sl { namespace queries {
 
     bool DataCapable::ReadBinaryFile(const std::string &filename) {
         std::ifstream input(filename, std::ios::binary);
+        if (!input.is_open()) return false;
 
         size_t input_p_num_elements = 0;
         input.read(reinterpret_cast<char*>(&input_p_num_elements), sizeof(size_t));

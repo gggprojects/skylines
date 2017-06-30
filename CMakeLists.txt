@@ -52,6 +52,9 @@ find_package(OpenGL)
 
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 
+#opengl
+set(LIBS ${LIBS} ${OPENGL_LIBRARIES})
+
 #dll post copy depencies. Debug purposes. In Linux we use stow
 if(WIN32)
     set(DEPENDENCY_LIBS_AND_FILES_DEBUG_SPECIFIC
@@ -96,11 +99,5 @@ endif()
 add_subdirectory(src)
 add_subdirectory(benchmarks)
 
-# #testing
-# option(BUILD_AUTOMATIC_TESTS "Build automatic tests" ON)
-# if(BUILD_AUTOMATIC_TESTS)
-    # # add_subdirectory(tests/unit)
-    # #add_subdirectory(tests/blackbox)
-    # # add_subdirectory(tests/benchmark)
-# endif()
+add_subdirectory(tests/blackbox)
 

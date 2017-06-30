@@ -25,12 +25,18 @@ namespace sl { namespace ui { namespace main_window {
         ui_->setupUi(this);
         ogl_ = new ogl::OGLWidget(thread_errors_ptr_, weighted_query_ptr_, this);
         ui_->horizontalLayout_2->addWidget(ogl_);
-        connect(ui_->pushButton, &QPushButton::clicked, this, &MainWindow::Run);
+        connect(ui_->pushButton_STS, &QPushButton::clicked, this, &MainWindow::RunSingleThreadSorting);
+        connect(ui_->pushButton_STBF, &QPushButton::clicked, this, &MainWindow::RunSingleThreadBruteForce);
+        connect(ui_->pushButton_STBFDiscarting, &QPushButton::clicked, this, &MainWindow::RunSingleThreadBruteForceWithDiscarting);
+        connect(ui_->pushButton_MTBF, &QPushButton::clicked, this, &MainWindow::RunMultiThreadBruteForce);
+        connect(ui_->pushButton_GPUBF, &QPushButton::clicked, this, &MainWindow::RunGPUBruteForce);
+
         connect(ui_->actionSave_image_to_file, &QAction::triggered, this, &MainWindow::SaveImage);
         connect(ui_->initRandom_PB, &QPushButton::clicked, this, &MainWindow::InitRandom);
         connect(ui_->serialize_input_points_PB, &QPushButton::clicked, this, &MainWindow::SerializeInputPoints);
         connect(ui_->load_input_points_PB, &QPushButton::clicked, this, &MainWindow::LoadInputPoints);
         connect(ui_->clear_PB2, &QPushButton::clicked, this, &MainWindow::Clear);
+        connect(ui_->pushButton_ClearResult, &QPushButton::clicked, this, &MainWindow::ClearResult);
         connect(ogl_, &ogl::OGLWidget::Moved, this, &MainWindow::MouseMoved);
         connect(ogl_, &ogl::OGLWidget::Selected, this, &MainWindow::PointSelected);
         connect(ogl_, &ogl::OGLWidget::Painted, this, &MainWindow::Render);
@@ -42,16 +48,33 @@ namespace sl { namespace ui { namespace main_window {
         delete ui_;
     }
 
-    void MainWindow::Run() {
-        ////debug
-        //std::string json_str = ReadAllFile("first_dominated.json");
-        //weighted_query_ptr_->FromJson(json_str);
+    void MainWindow::RunSingleThreadBruteForce() {
+        weighted_query_ptr_->RunSingleThreadBruteForce();
+        ogl_->update();
+    }
 
+    void MainWindow::RunSingleThreadBruteForceWithDiscarting() {
+        weighted_query_ptr_->RunSingleThreadBruteForceDiscarting();
+        ogl_->update();
+    }
+
+    void MainWindow::RunSingleThreadSorting() {
         weighted_query_ptr_->RunSingleThreadSorting();
         ogl_->update();
     }
 
+    void MainWindow::RunMultiThreadBruteForce() {
+        weighted_query_ptr_->RunMultiThreadBruteForce();
+        ogl_->update();
+    }
+
+    void MainWindow::RunGPUBruteForce() {
+        weighted_query_ptr_->RunGPUBruteForce();
+        ogl_->update();
+    }
+
     void MainWindow::InitRandom() {
+        weighted_query_ptr_->Clear();
         weighted_query_ptr_->InitRandom(static_cast<size_t>(ui_->spinBox_P->value()), static_cast<size_t>(ui_->spinBox_Q->value()));
         ogl_->update();
     }
@@ -102,6 +125,11 @@ namespace sl { namespace ui { namespace main_window {
 
     void MainWindow::Clear() {
         weighted_query_ptr_->Clear();
+        ogl_->update();
+    }
+
+    void MainWindow::ClearResult() {
+        weighted_query_ptr_->ClearOutput();
         ogl_->update();
     }
 
