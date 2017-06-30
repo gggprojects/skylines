@@ -18,6 +18,10 @@ namespace sl { namespace queries {
             output_.Clear();
         }
 
+        void ClearOutput() {
+            output_.Clear();
+        }
+
         bool FromFile(const std::string &filename);
         bool ToFile(const std::string &filename);
 
@@ -25,6 +29,7 @@ namespace sl { namespace queries {
 
         const Data<data::WeightedPoint> & GetInputP() const { return input_p_; }
         const Data<data::Point> & GetInputQ() const { return input_q_; }
+        const NonConstData<data::WeightedPoint> & GetOuput() const { return output_; }
 
     private:
         bool ReadJsonFile(const std::string &filename);

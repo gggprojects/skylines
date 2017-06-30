@@ -25,10 +25,17 @@ namespace sl { namespace ui { namespace main_window {
     private:
         void InitRandom();
         void SaveImage();
-        void Run();
+
+        void RunSingleThreadBruteForce();
+        void RunSingleThreadBruteForceWithDiscarting();
+        void RunSingleThreadSorting();
+        void RunMultiThreadBruteForce();
+        void RunGPUBruteForce();
+
         void SerializeInputPoints();
         void LoadInputPoints();
         void Clear();
+        void ClearResult();
 
         void MouseMoved(int dx, int dy);
         void PointSelected(int x, int y);

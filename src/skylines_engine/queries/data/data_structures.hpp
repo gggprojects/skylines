@@ -15,7 +15,7 @@ namespace sl { namespace queries {namespace data {
 
         bool IsDominated(const T &other, const std::vector<Point> &q) const {
             for (const Point p_q : q) {
-                float distance = this->Distance(p_q);
+                float distance = Distance(p_q);
                 float other_distance = other.Distance(p_q);
                 if (distance <= other_distance) {
                     return false;
@@ -34,6 +34,10 @@ namespace sl { namespace queries {namespace data {
         }
 
         Point(float x, float y) : x_(x), y_(y) {
+        }
+
+        bool operator==(const Point &other) {
+            return x_ == other.x_ && y_ == other.y_;
         }
 
         void Render() const final {
@@ -69,6 +73,10 @@ namespace sl { namespace queries {namespace data {
             weight_(other.weight_) {
         }
 
+        bool operator==(const WeightedPoint &other) {
+            return point_ == other.point_ && weight_ == other.weight_;
+        }
+
         void Render() const final {
             glVertex2f(point_.x_, point_.y_);
             //render weight text
@@ -79,7 +87,7 @@ namespace sl { namespace queries {namespace data {
         }
 
         float SquaredDistance(const Point &other) const final {
-            return point_.SquaredDistance(other) * weight_;
+            return point_.SquaredDistance(other) / (std::powf(weight_, 2));
         }
 
         Point point_;
