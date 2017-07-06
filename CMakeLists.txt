@@ -55,6 +55,9 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS})
 #opengl
 set(LIBS ${LIBS} ${OPENGL_LIBRARIES})
 
+# Spdlog
+include_directories("${APIS_PATH}/fast-cpp-csv-parser-master/include")
+
 #dll post copy depencies. Debug purposes. In Linux we use stow
 if(WIN32)
     set(DEPENDENCY_LIBS_AND_FILES_DEBUG_SPECIFIC
