@@ -36,7 +36,7 @@ namespace sl { namespace queries {namespace data {
         Point(float x, float y) : x_(x), y_(y) {
         }
 
-        bool operator==(const Point &other) {
+        bool operator==(const Point &other) const {
             return x_ == other.x_ && y_ == other.y_;
         }
 
@@ -73,8 +73,12 @@ namespace sl { namespace queries {namespace data {
             weight_(other.weight_) {
         }
 
-        bool operator==(const WeightedPoint &other) {
+        bool operator==(const WeightedPoint &other) const {
             return point_ == other.point_ && weight_ == other.weight_;
+        }
+
+        bool operator!=(const WeightedPoint &other) const {
+            return !(*this == other);
         }
 
         void Render() const final {

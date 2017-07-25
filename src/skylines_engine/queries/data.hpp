@@ -64,14 +64,14 @@ namespace sl { namespace queries {
     class skylines_engine_DLL_EXPORTS NonConstData : public Data<T> {
     public:
         NonConstData & operator=(const NonConstData &other) {
-            points_.assign(other.points_.begin(), other.points_.end());
+            points_ = other.points_;
             return *this;
         }
-        //NonConstData() {}
+        NonConstData() {}
 
-        //NonConstData(const NonConstData<T> &other) {
-        //    //points_.assign(other.GetPoints().begin(), other.GetPoints().end());
-        //}
+        NonConstData(NonConstData<T> &&other) {
+            points_ = other.points_;
+        }
 
         std::vector<T> & Points() { return points_; }
 
