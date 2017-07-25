@@ -76,6 +76,12 @@ TEST_P(InputInitializer, TestOutputCorrectness) {
     mtbf_output = wq.GetOuput();
 
     CheckOuput(sts_output, mtbf_output, __LINE__);
+
+    wq.RunMultiThreadSorting();
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> mts_output;
+    mts_output = wq.GetOuput();
+
+    CheckOuput(stbf_output, mts_output, __LINE__);
 }
 
 INSTANTIATE_TEST_CASE_P(InstantiationName, InputInitializer, ::testing::Values(

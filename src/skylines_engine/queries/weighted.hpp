@@ -19,6 +19,7 @@ namespace sl { namespace queries {
         void RunSingleThreadBruteForceDiscarting();
         void RunSingleThreadSorting();
         void RunMultiThreadBruteForce();
+        void RunMultiThreadSorting();
         void RunGPUBruteForce();
 
         void Render() const final;
@@ -33,6 +34,7 @@ namespace sl { namespace queries {
         void ComputeSingleThreadBruteForce(
             std::vector<data::WeightedPoint>::const_iterator first_skyline_candidate,
             std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate);
+        void ComputeMultiThreadSorting();
         void ComputeGPUBruteForce();
     };
 }}

@@ -68,9 +68,9 @@ if(WIN32)
        "${APIS_PATH}/googletest-distribution/lib/Debug/gmock_main.dll"
 
        #qt
-       "C:/Qt/5.9/msvc2017_64/bin/Qt5Cored.dll"
-       "C:/Qt/5.9/msvc2017_64/bin/Qt5Guid.dll"
-       "C:/Qt/5.9/msvc2017_64/bin/Qt5Widgetsd.dll"
+       "$ENV{CMAKE_PREFIX_PATH}/bin/Qt5Cored.dll"
+       "$ENV{CMAKE_PREFIX_PATH}/bin/Qt5Guid.dll"
+       "$ENV{CMAKE_PREFIX_PATH}/bin/Qt5Widgetsd.dll"
 
        #celero
        "${APIS_PATH}/celero-master/bin/celerod.dll"
@@ -83,9 +83,9 @@ if(WIN32)
        "${APIS_PATH}/googletest-distribution/lib/Release/gmock_main.dll"
 
        #qt
-       "C:/Qt/5.9/msvc2017_64/bin/Qt5Core.dll"
-       "C:/Qt/5.9/msvc2017_64/bin/Qt5Gui.dll"
-       "C:/Qt/5.9/msvc2017_64/bin/Qt5Widgets.dll"
+       "$ENV{CMAKE_PREFIX_PATH}/bin/Qt5Core.dll"
+       "$ENV{CMAKE_PREFIX_PATH}/bin/Qt5Gui.dll"
+       "$ENV{CMAKE_PREFIX_PATH}/bin/Qt5Widgets.dll"
 
        #celero
        "${APIS_PATH}/celero-master/bin/celero.dll"

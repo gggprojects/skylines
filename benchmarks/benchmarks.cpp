@@ -1,6 +1,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <functional>
 
 #include <celero/Celero.h>
 #include <csv.h>
@@ -32,48 +33,95 @@ void GenerateFile(size_t input_p_size, size_t input_q_size) {
 }
 
 void GenerateFiles() {
-    //GenerateFile(500, 10);
-    //GenerateFile(1000, 10);
-    //GenerateFile(5000, 10);
-    //GenerateFile(10000, 10);
-    //GenerateFile(100000, 10);
-    GenerateFile(1, 1);
-    GenerateFile(2, 1);
-    GenerateFile(3, 1);
-    GenerateFile(4, 1);
-    GenerateFile(5, 1);
+    GenerateFile(500, 10);
+    GenerateFile(1000, 10);
+    GenerateFile(5000, 10);
+    GenerateFile(10000, 10);
+    GenerateFile(100000, 10);
+    //GenerateFile(1, 1);
+    //GenerateFile(2, 1);
+    //GenerateFile(3, 1);
+    //GenerateFile(4, 1);
+    //GenerateFile(5, 1);
+}
+
+struct Experiment {
+    std::string input_size_;
+    std::string experiment_;
+    double baseline_;
+    double max_usec_;
+    double min_usec_;
+    double mean_usec_;
+    double variance_;
+    double standard_deviation_;
+    double skewness_;
+    double kurtosis_;
+    double z_score_;
+};
+
+std::string GetHeader(const std::vector<Experiment> &experiments) {
+    std::string header = "Input size,Baseline (Brute force)";
+    int pos = 1;
+    while (experiments[pos].experiment_ != "Baseline") {
+        header += ',' + experiments[pos].experiment_;
+        pos++;
+    }
+    header += '\n';
+    return std::move(header);
+}
+
+void WriteFile(const std::vector<Experiment> &experiments, const std::string &filename, std::function<double(const Experiment&)> f) {
+    std::string output;
+    output += GetHeader(experiments);
+
+    int pos = 0;
+    while (pos < experiments.size()) {
+        std::string current_input_size = experiments[pos].input_size_;
+        output += current_input_size;
+        while (pos < experiments.size() && experiments[pos].input_size_ == current_input_size) {
+            output += ',' + std::to_string(f(experiments[pos]));
+            pos++;
+        }
+        output += '\n';
+    }
+
+    std::ofstream output_file(filename);
+    output_file << output;
+    output_file.close();
 }
 
 void TransformCSV(const std::string &filename) {
-    std::string output;
+    std::vector<Experiment> experiments;
     io::CSVReader<17> in(filename);
     in.read_header(io::ignore_extra_column, "Group", "Experiment", "Problem Space", "Samples", "Iterations", "Failure", "Baseline", "us/Iteration", "Iterations/sec", "Min (us)", "Mean (us)", "Max (us)", "Variance", "Standard Deviation", "Skewness", "Kurtosis", "Z Score");
-    output = "PxQ,Experiment,Improvement,Min Running Time(s),Max Running Time(s),Mean Running Time(s),Variance,Standard Deviation,Skewness,Kurtosis,Z Score\n";
     std::string group, experiment;
-    double problem_space, samples, iterations, failure, baseline, us_per_iteration, iterations_sec, min_us, mean_us, max_us, variance, standard_deviation, skewness, kurtosis, z_core;
-    while (in.read_row(group, experiment, problem_space, samples, iterations, failure, baseline, us_per_iteration, iterations_sec, min_us, mean_us, max_us, variance, standard_deviation, skewness, kurtosis, z_core)) {
-        std::string line;
-
-        line += std::to_string(experiment_value_filename_map[problem_space].input_p_size_) + "x" + std::to_string(experiment_value_filename_map[problem_space].input_q_size_) + ",";
-        line += experiment + ",";
-        line += std::to_string(baseline) + ",";
-        line += std::to_string(min_us) + ",";
-        line += std::to_string(max_us) + ",";
-        line += std::to_string(mean_us) + ",";
-        line += std::to_string(variance) + ",";
-        line += std::to_string(standard_deviation) + ",";
-        line += std::to_string(skewness) + ",";
-        line += std::to_string(kurtosis) + ",";
-        line += std::to_string(z_core) + ",";
-        line += "\n";
-        output += line;
+    double problem_space, samples, iterations, failure, baseline, us_per_iteration, iterations_sec, min_us, mean_us, max_us, variance, standard_deviation, skewness, kurtosis, z_score;
+    while (in.read_row(group, experiment, problem_space, samples, iterations, failure, baseline, us_per_iteration, iterations_sec, min_us, mean_us, max_us, variance, standard_deviation, skewness, kurtosis, z_score)) {
+        Experiment e;
+        e.input_size_ = std::to_string(experiment_value_filename_map[problem_space].input_p_size_) + "x" + std::to_string(experiment_value_filename_map[problem_space].input_q_size_);
+        e.experiment_ = experiment;
+        e.baseline_ = baseline;
+        e.max_usec_ = max_us;
+        e.min_usec_ = min_us;
+        e.mean_usec_ = mean_us;
+        e.variance_ = variance;
+        e.standard_deviation_ = standard_deviation;
+        e.skewness_ = skewness;
+        e.kurtosis_ = kurtosis;
+        e.z_score_ = z_score;
+        experiments.push_back(e);
     }
 
-    {
-        std::ofstream output_file(filename + ".transformed.csv");
-        output_file << output;
-        output_file.close();
-    }
+    //sort by input size
+    std::stable_sort(experiments.begin(), experiments.end(), [](const Experiment &a, const Experiment &b) -> bool {
+        int a_p_size = std::stoi(a.input_size_.substr(0, a.input_size_.find('x')));
+        int b_p_size = std::stoi(b.input_size_.substr(0, b.input_size_.find('x')));
+        return a_p_size < b_p_size;
+    });
+
+    WriteFile(experiments, filename + ".transformed-improvement.csv", [](const Experiment &e) -> double { return e.baseline_; });
+    WriteFile(experiments, filename + ".transformed-running-time-min.csv", [](const Experiment &e) -> double { return e.min_usec_ / 1000000.0; });
+    //WriteFile(experiments, filename + ".transformed-running-time-max.csv", [](const Experiment &e) -> double { return e.min_usec_ / 1000000.0; });
 }
 
 int main(int argc, char** argv) {
@@ -153,4 +201,8 @@ BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 
 
 BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
     wq.RunMultiThreadBruteForce();
+}
+
+BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
+    wq.RunMultiThreadSorting();
 }
