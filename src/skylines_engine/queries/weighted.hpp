@@ -29,19 +29,12 @@ namespace sl { namespace queries {
 
         WeightedQuery(error::ThreadErrors_ptr error_ptr);
 
-        void InitRandom(size_t num_points_p, size_t num_points_q);
-        void RunSingleThreadBruteForce();
-        void RunSingleThreadBruteForceDiscarting();
-        void RunSingleThreadSorting();
-        void RunMultiThreadBruteForce();
-        void RunMultiThreadSorting();
-        void RunGPUBruteForce();
+        void RunAlgorithm(AlgorithmType type);
 
+        void InitRandom(size_t num_points_p, size_t num_points_q);
         void Render() const final;
 
     private:
-        void RunAlgorithm(AlgorithmType type);
-
         std::vector<std::shared_ptr<algorithms::Algorithm>> algorithms_;
     };
 }}

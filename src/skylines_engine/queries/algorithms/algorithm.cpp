@@ -1,7 +1,11 @@
 #include "queries/algorithms/algorithm.hpp"
 
 namespace sl { namespace queries { namespace algorithms {
-    Algorithm::Algorithm(const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q) :
+    Algorithm::Algorithm(
+        const std::string &logger,
+        error::ThreadErrors_ptr error_ptr,
+        const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q) :
+        common::SkylineElement("", "info", error_ptr),
         input_p_(input_p), input_q_(input_q) {
     }
 

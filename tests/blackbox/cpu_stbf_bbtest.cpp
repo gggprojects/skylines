@@ -1,7 +1,9 @@
 
 #include <algorithm>
 
+#pragma warning(push, 0)
 #include <gtest/gtest.h>
+#pragma warning(pop)
 
 #include "queries/weighted.hpp"
 #include "export_import.hpp"
@@ -55,33 +57,39 @@ void CheckOuput(sl::queries::NonConstData<sl::queries::data::WeightedPoint> &a, 
 
 TEST_P(InputInitializer, TestOutputCorrectness) {
 
-    wq.RunSingleThreadBruteForce();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> stbf_output;
     stbf_output = wq.GetOuput();
 
-    wq.RunSingleThreadBruteForceDiscarting();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> stbfd_output;
     stbfd_output = wq.GetOuput();
 
     CheckOuput(stbf_output, stbfd_output, __LINE__);
 
-    wq.RunSingleThreadSorting();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> sts_output;
     sts_output = wq.GetOuput();
 
     CheckOuput(stbfd_output, sts_output, __LINE__);
 
-    wq.RunMultiThreadBruteForce();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> mtbf_output;
     mtbf_output = wq.GetOuput();
 
     CheckOuput(sts_output, mtbf_output, __LINE__);
 
-    wq.RunMultiThreadSorting();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> mts_output;
     mts_output = wq.GetOuput();
 
     CheckOuput(stbf_output, mts_output, __LINE__);
+
+    //wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
+    //sl::queries::NonConstData<sl::queries::data::WeightedPoint> mts_output;
+    //mts_output = wq.GetOuput();
+
+    //CheckOuput(stbf_output, mts_output, __LINE__);
 }
 
 INSTANTIATE_TEST_CASE_P(InstantiationName, InputInitializer, ::testing::Values(

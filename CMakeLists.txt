@@ -44,10 +44,8 @@ include_directories("${APIS_PATH}/spdlog-master/include")
 
 #qt
 set(CMAKE_INCLUDE_CURRENT_DIR ON) # Find includes in corresponding build directories
-# Find libraries
 find_package(Qt5Widgets)
 find_package(Qt5Core)
-# OpenGL & GLEW library
 find_package(OpenGL)
 
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
@@ -55,12 +53,12 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS})
 #opengl
 set(LIBS ${LIBS} ${OPENGL_LIBRARIES})
 
-# Spdlog
-include_directories("${APIS_PATH}/fast-cpp-csv-parser-master/include")
+# CSV parser
+include_directories(SYSTEM "${APIS_PATH}/fast-cpp-csv-parser-master/include")
 
 #CUDA
 find_package(CUDA)
-include_directories(${CUDA_TOOLKIT_INCLUDE})
+include_directories(${CUDA_TOOLKIT_INCLUDE} ${CUDA_TOOLKIT_INCLUDE}/)
 set(LIBS ${LIBS} ${CUDA_CUDART_LIBRARY} ${CUDA_CUDA_LIBRARY})
 
 #dll post copy depencies. Debug purposes. In Linux we use stow

@@ -1,18 +1,22 @@
 #ifndef SKYLINES_QUERIES_ALGORITHMS_ALGORITHM_HPP
 #define SKYLINES_QUERIES_ALGORITHMS_ALGORITHM_HPP
 
-#include "queries/data.hpp"
-
 #include <algorithm>
 #include <stack>
 #include <ppl.h>
 #include <future>
 #include <functional>
 
+#include "queries/data.hpp"
+#include "common/skyline_element.hpp"
+
 namespace sl { namespace queries { namespace algorithms {
-    class Algorithm {
+    class Algorithm : public common::SkylineElement {
     public:
-        Algorithm(const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q);
+        Algorithm(
+            const std::string &logger,
+            error::ThreadErrors_ptr error_ptr,
+            const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q);
 
         virtual void Run(NonConstData<data::WeightedPoint> *output) = 0;
 

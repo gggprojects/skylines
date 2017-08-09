@@ -4,15 +4,13 @@
 #include <cuda.h>
 
 namespace sl { namespace gpu {
+
+    std::vector<int> GPUDevices::devices_ids_;
+
     GPUDevices::GPUDevices(error::ThreadErrors_ptr error_ptr) :
         common::SkylineElement("GPUDevices", "info", error_ptr) {
         int num_devices;
         CUDA_CHECK(cudaGetDeviceCount(&num_devices));
-        for (int device = 0; device < num_devices; ++device) {
-            cudaSetDevice(device);
-            cudaDeviceProp deviceProp;
-            cudaGetDeviceProperties(&deviceProp, device);
-        }
     }
 
     // This function wraps the CUDA Driver API into a template function

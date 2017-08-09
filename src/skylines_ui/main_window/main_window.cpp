@@ -29,6 +29,7 @@ namespace sl { namespace ui { namespace main_window {
         connect(ui_->pushButton_STBF, &QPushButton::clicked, this, &MainWindow::RunSingleThreadBruteForce);
         connect(ui_->pushButton_STBFDiscarting, &QPushButton::clicked, this, &MainWindow::RunSingleThreadBruteForceWithDiscarting);
         connect(ui_->pushButton_MTBF, &QPushButton::clicked, this, &MainWindow::RunMultiThreadBruteForce);
+        connect(ui_->pushButton_MTS, &QPushButton::clicked, this, &MainWindow::RunMultiThreadSorting);
         connect(ui_->pushButton_GPUBF, &QPushButton::clicked, this, &MainWindow::RunGPUBruteForce);
 
         connect(ui_->actionSave_image_to_file, &QAction::triggered, this, &MainWindow::SaveImage);
@@ -49,27 +50,32 @@ namespace sl { namespace ui { namespace main_window {
     }
 
     void MainWindow::RunSingleThreadBruteForce() {
-        weighted_query_ptr_->RunSingleThreadBruteForce();
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE);
         ogl_->update();
     }
 
     void MainWindow::RunSingleThreadBruteForceWithDiscarting() {
-        weighted_query_ptr_->RunSingleThreadBruteForceDiscarting();
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING);
         ogl_->update();
     }
 
     void MainWindow::RunSingleThreadSorting() {
-        weighted_query_ptr_->RunSingleThreadSorting();
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING);
         ogl_->update();
     }
 
     void MainWindow::RunMultiThreadBruteForce() {
-        weighted_query_ptr_->RunMultiThreadBruteForce();
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE);
+        ogl_->update();
+    }
+
+    void MainWindow::RunMultiThreadSorting() {
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING);
         ogl_->update();
     }
 
     void MainWindow::RunGPUBruteForce() {
-        weighted_query_ptr_->RunGPUBruteForce();
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
         ogl_->update();
     }
 

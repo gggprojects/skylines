@@ -6,8 +6,10 @@
 namespace sl { namespace queries { namespace algorithms {
     class SingleThreadSorting : public Algorithm {
     public:
-        SingleThreadSorting(const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q) :
-            Algorithm(input_p, input_q) {
+        SingleThreadSorting(
+            error::ThreadErrors_ptr error_ptr, 
+            const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q) :
+            Algorithm("SingleThreadSorting", error_ptr, input_p, input_q) {
         }
 
     protected:

@@ -3,9 +3,11 @@
 #include <iostream>
 #include <functional>
 
+#pragma warning(push, 0)
 #include <celero/Celero.h>
 #include <csv.h>
 #include <boost/program_options.hpp>
+#pragma warning(pop)
 
 #include "queries/weighted.hpp"
 
@@ -140,6 +142,7 @@ int main(int argc, char** argv) {
             .run(), vm);
         boost::program_options::notify(vm);
     } catch (const std::exception &e) {
+        (void)e;
         std::cout << desc << "\n";
         return 1;
     }
@@ -188,21 +191,25 @@ protected:
 };
 
 BASELINE_F(SkylineComputation, Baseline, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunSingleThreadBruteForce();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE);
 }
 
 BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarting, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunSingleThreadBruteForceDiscarting();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING);
 }
 
 BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunSingleThreadSorting();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING);
 }
 
 BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunMultiThreadBruteForce();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE);
 }
 
 BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunMultiThreadSorting();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING);
 }
+
+//BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 5, 10) {
+//    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
+//}

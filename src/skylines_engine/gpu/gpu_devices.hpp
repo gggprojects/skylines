@@ -14,8 +14,6 @@ namespace sl { namespace gpu {
     private:
         static std::vector<int> devices_ids_;
     };
-
-    std::vector<int> GPUDevices::devices_ids_;
 }}
 
 #endif // GPU_DEVICES_HPP
