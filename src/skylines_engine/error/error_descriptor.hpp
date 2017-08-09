@@ -3,9 +3,14 @@
 
 #include <string>
 #include "error/errors_severity.hpp"
+#include "export_import.hpp"
 
 namespace sl { namespace error {
+
+    class skylines_engine_DLL_EXPORTS ErrorHandler;
+
     class ErrorDescriptor {
+        friend class ErrorHandler;
     public:
         ErrorDescriptor(ErrorSeverity severity, int code, const std::string &file, int line) :
             severity_(severity), code_(code), file_(file), line_(line) {

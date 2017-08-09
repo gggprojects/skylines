@@ -58,8 +58,17 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARIES})
 # Spdlog
 include_directories("${APIS_PATH}/fast-cpp-csv-parser-master/include")
 
+#CUDA
+find_package(CUDA)
+include_directories(${CUDA_TOOLKIT_INCLUDE})
+set(LIBS ${LIBS} ${CUDA_CUDART_LIBRARY} ${CUDA_CUDA_LIBRARY})
+
 #dll post copy depencies. Debug purposes. In Linux we use stow
 if(WIN32)
+	set(DEPENDENCY_LIBS_AND_FILES
+	   #cuda
+	   "${CUDA_TOOLKIT_ROOT_DIR}/bin/cudart64_90.dll"
+	)
     set(DEPENDENCY_LIBS_AND_FILES_DEBUG_SPECIFIC
        #gtest
        "${APIS_PATH}/googletest-distribution/lib/Debug/gtest.dll"
