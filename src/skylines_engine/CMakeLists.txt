@@ -3,8 +3,8 @@ file(GLOB_RECURSE SRCS *.hpp *.cpp *.cu *.cuh)
 #we set the visual studio virtual folders
 source_group(TREE ${CMAKE_CURRENT_LIST_DIR} FILES ${SRCS})
 
-add_library(skylines_engine SHARED "${SRCS}")
-target_link_libraries(skylines_engine PRIVATE ${LIBS})
+cuda_add_library(skylines_engine SHARED "${SRCS}")
+target_link_libraries(skylines_engine ${LIBS})
 
 ######################################################
 # For VS environment purposes we copy the needed dll

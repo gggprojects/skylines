@@ -4,7 +4,7 @@
 #include "common/irenderable.hpp"
 #include "queries/data/random_generator.hpp"
 
-namespace sl { namespace queries {namespace data {
+namespace sl { namespace queries { namespace data {
 
     struct Point;
 

@@ -23,8 +23,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(APIS_PATH "$ENV{APIS_PATH_UdG}")
 
 # Boost
-include_directories("${APIS_PATH}/boost-1.64.0/include")
-link_directories("${APIS_PATH}/boost-1.64.0/lib")
+include_directories("${APIS_PATH}/boost-1.65.0/include")
+link_directories("${APIS_PATH}/boost-1.65.0/lib")
 
 # Gtest and GMock
 include_directories("${APIS_PATH}/googletest-distribution/include")
@@ -57,9 +57,12 @@ set(LIBS ${LIBS} ${OPENGL_LIBRARIES})
 include_directories(SYSTEM "${APIS_PATH}/fast-cpp-csv-parser-master/include")
 
 #CUDA
-find_package(CUDA)
-include_directories(${CUDA_TOOLKIT_INCLUDE} ${CUDA_TOOLKIT_INCLUDE}/)
-set(LIBS ${LIBS} ${CUDA_CUDART_LIBRARY} ${CUDA_CUDA_LIBRARY})
+find_package(CUDA QUIET REQUIRED)
+list(APPEND CUDA_NVCC_FLAGS --cl-version=2017)
+set(CUDA_HOST_COMPILER "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.11.25503/bin/HostX64/x64/cl.exe" CACHE STRING "" FORCE)
+set(CUDA_VERBOSE_BUILD ON CACHE BOOL "" FORCE)
+CUDA_INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
+set(CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE ON CACHE BOOL "" FORCE)
 
 #dll post copy depencies. Debug purposes. In Linux we use stow
 if(WIN32)
