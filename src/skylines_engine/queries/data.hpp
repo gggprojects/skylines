@@ -12,7 +12,7 @@ namespace sl { namespace queries {
     class DataCapable;
 
     template<class T>
-    class skylines_engine_DLL_EXPORTS Data : public common::IRenderable {
+    class skylines_engine_DLL_EXPORTS Data {
         friend class DataCapable;
     public:
         Data() {}
@@ -24,14 +24,6 @@ namespace sl { namespace queries {
         Data& operator=(Data &&points) {
             points_ = std::move(points.points_);
             return *this;
-        }
-
-        void Render() const final {
-            glBegin(GL_POINTS);
-            for (const T &p : points_) {
-                p.Render();
-            }
-            glEnd();
         }
 
         void InitRandom(size_t num_points) {

@@ -165,7 +165,7 @@ namespace sl { namespace queries {
     }
 
     size_t DataCapable::GetClosetsPointPosition(const data::Point &point) {
-        float min_distance = std::pow(2, 2) + std::pow(2, 2);
+        float min_distance = static_cast<float>(std::pow(2, 2) + std::pow(2, 2));
         size_t closest_one = 0;
         for (size_t i = 0; i < input_p_.GetPoints().size(); i++) {
             float d = input_p_.GetPoints()[i].SquaredDistance(point);

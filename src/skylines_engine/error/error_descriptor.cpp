@@ -1,4 +1,9 @@
 #include <string>
+
+#pragma warning(push, 0)
+#include <cuda_runtime.h>
+#pragma warning(pop)
+
 #include "error/error_descriptor.hpp"
 #include "error/return_codes.hpp"
 
@@ -8,11 +13,11 @@ namespace sl { namespace error {
     }
 
     std::string OpenGLError::ErrorMessage() const {
-        return "";
+        return "";// gluErrorString(code_);
     }
 
     std::string CudaError::ErrorMessage() const {
-        return "";
+        return cudaGetErrorString(static_cast<cudaError_t>(code_));
     }
 }}
 

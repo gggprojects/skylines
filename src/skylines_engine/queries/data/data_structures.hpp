@@ -1,36 +1,19 @@
 #ifndef SKYLINES_QUERIES_DATA_DATA_STRUCTURES_HPP
 #define SKYLINES_QUERIES_DATA_DATA_STRUCTURES_HPP
 
+#include <cuda_runtime.h>
+
 #include "common/irenderable.hpp"
 #include "queries/data/random_generator.hpp"
 
-namespace sl { namespace queries {namespace data {
+namespace sl { namespace queries { namespace data {
 
-    struct Point;
-
-    template<class T>
-    struct Dominable {
-        virtual float Distance(const Point &other) const = 0;
-        virtual float SquaredDistance(const Point &other) const = 0;
-
-        bool IsDominated(const T &other, const std::vector<Point> &q) const {
-            for (const Point p_q : q) {
-                float distance = Distance(p_q);
-                float other_distance = other.Distance(p_q);
-                if (distance <= other_distance) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    };
-
-    struct Point : public common::IRenderable, Dominable<Point> {
+    struct Point {
 
         Point() {}
 
         //random initializer
-        Point(data::UniformRealRandomGenerator &r) : Point(r.Next(), r.Next()) {
+        Point(data::UniformRealRandomGenerator &r) : Point(static_cast<float>(r.Next()), static_cast<float>(r.Next())) {
         }
 
         Point(float x, float y) : x_(x), y_(y) {
@@ -40,15 +23,11 @@ namespace sl { namespace queries {namespace data {
             return x_ == other.x_ && y_ == other.y_;
         }
 
-        void Render() const final {
-            glVertex2f(x_, y_);
-        }
-
-        float Distance(const Point &other) const final {
+        __host__ __device__ float Distance(const Point &other) const {
             return std::sqrtf(SquaredDistance(other));
         }
 
-        float SquaredDistance(const Point &other) const final {
+        __host__ __device__ float SquaredDistance(const Point &other) const {
             return std::powf(x_ - other.x_, 2) + std::powf(y_ - other.y_, 2);
         }
 
@@ -56,7 +35,7 @@ namespace sl { namespace queries {namespace data {
         float y_;
     };
 
-    struct WeightedPoint : public common::IRenderable, Dominable<WeightedPoint> {
+    struct WeightedPoint {
 
         WeightedPoint() {}
 
@@ -73,6 +52,17 @@ namespace sl { namespace queries {namespace data {
             weight_(other.weight_) {
         }
 
+        bool IsDominated(const WeightedPoint &other, const std::vector<Point> &q) const {
+            for (const Point p_q : q) {
+                float distance = Distance(p_q);
+                float other_distance = other.Distance(p_q);
+                if (distance <= other_distance) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         bool operator==(const WeightedPoint &other) const {
             return point_ == other.point_ && weight_ == other.weight_;
         }
@@ -81,18 +71,14 @@ namespace sl { namespace queries {namespace data {
             return !(*this == other);
         }
 
-        void Render() const final {
-            glVertex2f(point_.x_, point_.y_);
-            //render weight text
-        }
-
-        float Distance(const Point &other) const final {
+        __host__ __device__ float Distance(const Point &other) const {
             return point_.Distance(other) * weight_;
         }
 
-        float SquaredDistance(const Point &other) const final {
+        __host__ __device__ float SquaredDistance(const Point &other) const {
             return point_.SquaredDistance(other) / (std::powf(weight_, 2));
         }
+
 
         Point point_;
         float weight_;

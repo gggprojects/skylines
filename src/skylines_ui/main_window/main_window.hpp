@@ -30,6 +30,7 @@ namespace sl { namespace ui { namespace main_window {
         void RunSingleThreadBruteForceWithDiscarting();
         void RunSingleThreadSorting();
         void RunMultiThreadBruteForce();
+        void RunMultiThreadSorting();
         void RunGPUBruteForce();
 
         void SerializeInputPoints();

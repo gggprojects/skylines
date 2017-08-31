@@ -23,8 +23,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(APIS_PATH "$ENV{APIS_PATH_UdG}")
 
 # Boost
-include_directories("${APIS_PATH}/boost-1.64.0/include")
-link_directories("${APIS_PATH}/boost-1.64.0/lib")
+include_directories("${APIS_PATH}/boost-1.65.0")
+link_directories("${APIS_PATH}/boost-1.65.0/lib64-msvc-14.0")
 
 # Gtest and GMock
 include_directories("${APIS_PATH}/googletest-distribution/include")
@@ -44,10 +44,8 @@ include_directories("${APIS_PATH}/spdlog-master/include")
 
 #qt
 set(CMAKE_INCLUDE_CURRENT_DIR ON) # Find includes in corresponding build directories
-# Find libraries
 find_package(Qt5Widgets)
 find_package(Qt5Core)
-# OpenGL & GLEW library
 find_package(OpenGL)
 
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
@@ -55,17 +53,29 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS})
 #opengl
 set(LIBS ${LIBS} ${OPENGL_LIBRARIES})
 
-# Spdlog
-include_directories("${APIS_PATH}/fast-cpp-csv-parser-master/include")
+# CSV parser
+include_directories(SYSTEM "${APIS_PATH}/fast-cpp-csv-parser-master/include")
+
+#CUDA
+find_package(CUDA QUIET REQUIRED)
+LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_53 --gpu-code=compute_53)
+LIST(APPEND CUDA_NVCC_FLAGS_DEBUG -g -G)
+CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/skylines_engine)
+set(CUDA_VERBOSE_BUILD ON CACHE BOOL "" FORCE)
+include_directories(${CUDA_INCLUDE_DIRS})
 
 #dll post copy depencies. Debug purposes. In Linux we use stow
 if(WIN32)
+	set(DEPENDENCY_LIBS_AND_FILES
+	   #cuda
+	   "${CUDA_TOOLKIT_ROOT_DIR}/bin/cudart64_80.dll"
+	)
     set(DEPENDENCY_LIBS_AND_FILES_DEBUG_SPECIFIC
        #gtest
-       "${APIS_PATH}/googletest-distribution/lib/Debug/gtest.dll"
-       "${APIS_PATH}/googletest-distribution/lib/Debug/gtest_main.dll"
-       "${APIS_PATH}/googletest-distribution/lib/Debug/gmock.dll"
-       "${APIS_PATH}/googletest-distribution/lib/Debug/gmock_main.dll"
+       "${APIS_PATH}/googletest-distribution/bin/Debug/gtest.dll"
+       "${APIS_PATH}/googletest-distribution/bin/Debug/gtest_main.dll"
+       "${APIS_PATH}/googletest-distribution/bin/Debug/gmock.dll"
+       "${APIS_PATH}/googletest-distribution/bin/Debug/gmock_main.dll"
 
        #qt
        "$ENV{CMAKE_PREFIX_PATH}/bin/Qt5Cored.dll"
@@ -77,10 +87,10 @@ if(WIN32)
     )
     set(DEPENDENCY_LIBS_AND_FILES_RELEASE_SPECIFIC
        #gtest
-       "${APIS_PATH}/googletest-distribution/lib/Release/gtest.dll"
-       "${APIS_PATH}/googletest-distribution/lib/Release/gtest_main.dll"
-       "${APIS_PATH}/googletest-distribution/lib/Release/gmock.dll"
-       "${APIS_PATH}/googletest-distribution/lib/Release/gmock_main.dll"
+       "${APIS_PATH}/googletest-distribution/bin/Release/gtest.dll"
+       "${APIS_PATH}/googletest-distribution/bin/Release/gtest_main.dll"
+       "${APIS_PATH}/googletest-distribution/bin/Release/gmock.dll"
+       "${APIS_PATH}/googletest-distribution/bin/Release/gmock_main.dll"
 
        #qt
        "$ENV{CMAKE_PREFIX_PATH}/bin/Qt5Core.dll"

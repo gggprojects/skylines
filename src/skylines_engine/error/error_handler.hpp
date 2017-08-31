@@ -5,6 +5,10 @@
 #include <memory>
 #include <string.h>
 
+#pragma warning(push, 0)
+#include <cuda_runtime.h>
+#pragma warning(pop)
+
 #include "export_import.hpp"
 #include "error/threads_errors.hpp"
 #include "error/error_descriptor.hpp"
@@ -16,10 +20,16 @@
     #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
 
-#define SL_LOG_DEBUG(x)  LogDebug(x, __FILENAME__, __LINE__)
-#define SL_LOG_INFO(x)   LogInfo(x, __FILENAME__, __LINE__)
-#define SL_LOG_WARN(x)   LogWarn(x, __FILENAME__, __LINE__)
-#define SL_LOG_ERROR(x)  LogError(x, __FILENAME__, __LINE__)
+#define SL_LOG_DEBUG(x)     LogDebug(x, __FILENAME__, __LINE__)
+#define SL_LOG_INFO(x)      LogInfo(x, __FILENAME__, __LINE__)
+#define SL_LOG_WARN(x)      LogWarn(x, __FILENAME__, __LINE__)
+#define SL_LOG_ERROR(x)     LogError(x, __FILENAME__, __LINE__)
+
+#define SL_PUSH_ERROR(x)    PushError(std::make_shared<sl::error::SkylinesError>(sl::error::ErrorSeverity::ERRORS, x, __FILENAME__, __LINE__))
+#define GL_PUSH_ERROR(x)    PushError(std::make_shared<sl::error::OpenGLError>(sl::error::ErrorSeverity::ERRORS, x, __FILENAME__, __LINE__))
+#define CUDA_PUSH_ERROR(x)  PushError(std::make_shared<sl::error::CudaError>(sl::error::ErrorSeverity::ERRORS, x, __FILENAME__, __LINE__))
+#define CUDA_CHECK(x)       CudaCheck(x, __FILENAME__, __LINE__)
+#define CUDA_CHECK_LAST_ERROR CUDA_CHECK(cudaGetLastError())
 
 namespace sl { namespace error {
 
@@ -30,6 +40,7 @@ namespace sl { namespace error {
 
         void PushError(ErrorDescriptor_ptr err) {
             thread_errors_->PushError(err);
+            LogError(err);
         }
 
         std::vector<std::string> GetErrors() {
@@ -56,11 +67,24 @@ namespace sl { namespace error {
             logger_ptr_->error("{0}:{1} {2}", file, line, argc);
         }
 
+        inline void LogError(ErrorDescriptor_ptr err) {
+            logger_ptr_->error("{0}:{1} {2}", err->file_, err->line_, err->ErrorMessage());
+        }
+
         void SetSeverity(std::string severity) {
             log::Logger::SetSeverity(logger_ptr_, severity);
         }
 
         void SetThreadErrors(ThreadErrors_ptr thread_errors) { thread_errors_ = thread_errors; }
+
+        void CudaCheck(cudaError_t result, char const *file, const int line) {
+            if (result != cudaSuccess) {
+                CUDA_PUSH_ERROR(result);
+#ifdef _DEBUG
+                assert(true);
+#endif
+            }
+        }
     private:
         ThreadErrors_ptr thread_errors_;
         log::Logger_ptr logger_ptr_;
