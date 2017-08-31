@@ -36,7 +36,7 @@ namespace sl { namespace queries { namespace algorithms {
 
         // sort by the first point in Q
         const data::Point &first_q = input_q_.GetPoints()[0];
-        concurrency::parallel_buffered_sort(sorted_input.Points().begin(), sorted_input.Points().end(), [&first_q](const data::WeightedPoint &a, const data::WeightedPoint &b) {
+        std::sort(sorted_input.Points().begin(), sorted_input.Points().end(), [&first_q](const data::WeightedPoint &a, const data::WeightedPoint &b) {
             return a.SquaredDistance(first_q) < b.SquaredDistance(first_q);
         });
 

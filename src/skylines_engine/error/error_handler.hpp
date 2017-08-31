@@ -5,7 +5,9 @@
 #include <memory>
 #include <string.h>
 
+#pragma warning(push, 0)
 #include <cuda_runtime.h>
+#pragma warning(pop)
 
 #include "export_import.hpp"
 #include "error/threads_errors.hpp"

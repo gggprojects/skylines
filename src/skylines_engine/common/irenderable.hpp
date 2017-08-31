@@ -2,7 +2,9 @@
 #ifndef SKYLINES_IRENDERABLE_HPP
 #define SKYLINES_IRENDERABLE_HPP
 
+#pragma warning(push, 0)
 #include <QOpenGLFunctions>
+#pragma warning(pop)
 
 #include "export_import.hpp"
 

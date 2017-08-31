@@ -40,11 +40,7 @@ void GenerateFiles() {
     GenerateFile(5000, 10);
     GenerateFile(10000, 10);
     GenerateFile(100000, 10);
-    //GenerateFile(1, 1);
-    //GenerateFile(2, 1);
-    //GenerateFile(3, 1);
-    //GenerateFile(4, 1);
-    //GenerateFile(5, 1);
+    GenerateFile(1000000, 10);
 }
 
 struct Experiment {
@@ -92,7 +88,33 @@ void WriteFile(const std::vector<Experiment> &experiments, const std::string &fi
     output_file.close();
 }
 
+void replaceAll(std::string *str, const std::string &from, const std::string &to) {
+    if (from.empty())
+        return;
+    size_t start_pos = 0;
+    while ((start_pos = str->find(from, start_pos)) != std::string::npos) {
+        str->replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+}
+
+void PreProcessFile(const std::string &filename) {
+    std::ifstream t(filename);
+    std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+    t.close();
+
+    replaceAll(&str, ",-nan(ind),", ",0,");
+    replaceAll(&str, ",nan(ind),", ",0,");
+
+    std::ofstream t2(filename);
+    t2 << str;
+    t2.close();
+}
+
 void TransformCSV(const std::string &filename) {
+
+    PreProcessFile(filename);
+
     std::vector<Experiment> experiments;
     io::CSVReader<17> in(filename);
     in.read_header(io::ignore_extra_column, "Group", "Experiment", "Problem Space", "Samples", "Iterations", "Failure", "Baseline", "us/Iteration", "Iterations/sec", "Min (us)", "Mean (us)", "Max (us)", "Variance", "Standard Deviation", "Skewness", "Kurtosis", "Z Score");
@@ -100,7 +122,7 @@ void TransformCSV(const std::string &filename) {
     double problem_space, samples, iterations, failure, baseline, us_per_iteration, iterations_sec, min_us, mean_us, max_us, variance, standard_deviation, skewness, kurtosis, z_score;
     while (in.read_row(group, experiment, problem_space, samples, iterations, failure, baseline, us_per_iteration, iterations_sec, min_us, mean_us, max_us, variance, standard_deviation, skewness, kurtosis, z_score)) {
         Experiment e;
-        e.input_size_ = std::to_string(experiment_value_filename_map[problem_space].input_p_size_) + "x" + std::to_string(experiment_value_filename_map[problem_space].input_q_size_);
+        e.input_size_ = std::to_string(experiment_value_filename_map[static_cast<uint64_t>(problem_space)].input_p_size_) + "x" + std::to_string(experiment_value_filename_map[static_cast<uint64_t>(problem_space)].input_q_size_);
         e.experiment_ = experiment;
         e.baseline_ = baseline;
         e.max_usec_ = max_us;
@@ -210,6 +232,6 @@ BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING);
 }
 
-//BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 5, 10) {
-//    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
-//}
+BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 5, 10) {
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
+}

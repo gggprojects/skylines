@@ -85,11 +85,11 @@ TEST_P(InputInitializer, TestOutputCorrectness) {
 
     CheckOuput(stbf_output, mts_output, __LINE__);
 
-    //wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
-    //sl::queries::NonConstData<sl::queries::data::WeightedPoint> mts_output;
-    //mts_output = wq.GetOuput();
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> gpubf_output;
+    gpubf_output = wq.GetOuput();
 
-    //CheckOuput(stbf_output, mts_output, __LINE__);
+    CheckOuput(gpubf_output, stbf_output, __LINE__);
 }
 
 INSTANTIATE_TEST_CASE_P(InstantiationName, InputInitializer, ::testing::Values(
@@ -98,6 +98,11 @@ INSTANTIATE_TEST_CASE_P(InstantiationName, InputInitializer, ::testing::Values(
     InputParameters(1, 0),
     InputParameters(1, 1),
     InputParameters(10, 10),
+    InputParameters(32, 10),
+    InputParameters(64, 10),
+    InputParameters(100, 10),
+    InputParameters(128, 10),
     InputParameters(1000, 10),
+    InputParameters(1024, 10),
     InputParameters(10, 1000)
 ));

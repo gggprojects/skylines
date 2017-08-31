@@ -21,15 +21,31 @@ namespace sl { namespace queries {
     void WeightedQuery::Render() const {
         glColor3f(1, 0, 0);
         glPointSize(3);
-        input_p_.Render();
 
+        //input_q
+        glBegin(GL_POINTS);
+        for (const sl::queries::data::WeightedPoint &w_point : input_p_.GetPoints()) {
+            glVertex2f(w_point.point_.x_, w_point.point_.y_);
+        }
+        glEnd();
+
+        //input_p
         glColor3f(0, 1, 0);
         glPointSize(3);
-        input_q_.Render();
+        glBegin(GL_POINTS);
+        for (const sl::queries::data::Point &p : input_q_.GetPoints()) {
+            glVertex2f(p.x_, p.y_);
+        }
+        glEnd();
 
+        //output
         glColor3f(0, 0, 1);
         glPointSize(6);
-        output_.Render();
+        glBegin(GL_POINTS);
+        for (const sl::queries::data::WeightedPoint &w_point : output_.GetPoints()) {
+            glVertex2f(w_point.point_.x_, w_point.point_.y_);
+        }
+        glEnd();
     }
 
     void WeightedQuery::RunAlgorithm(AlgorithmType type) {

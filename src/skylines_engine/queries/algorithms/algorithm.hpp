@@ -9,6 +9,7 @@
 
 #include "queries/data.hpp"
 #include "common/skyline_element.hpp"
+#include "queries/algorithms/algorithm.cuh"
 
 namespace sl { namespace queries { namespace algorithms {
     class Algorithm : public common::SkylineElement {
@@ -20,17 +21,10 @@ namespace sl { namespace queries { namespace algorithms {
 
         virtual void Run(NonConstData<data::WeightedPoint> *output) = 0;
 
-        inline bool IsDominated(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q) {
-            for (const data::Point p_q : q) {
-                float a_distance = a.SquaredDistance(p_q);
-                float b_distance = b.SquaredDistance(p_q);
-                if (a_distance <= b_distance) {
-                    return false;
-                }
-            }
-            return true;
-        }
 
+        inline bool static IsDominated(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q) {
+            return IsDominated_impl(a, b, q.data(), static_cast<int>(q.size()));
+        }
 
         inline int Dominator(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q) {
             bool a_is_dominated_by_b = true;
