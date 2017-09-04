@@ -8,7 +8,7 @@
 
 namespace sl { namespace queries { namespace data {
 
-    struct Point {
+    struct __align__(8) Point {
 
         Point() {}
 
@@ -17,6 +17,9 @@ namespace sl { namespace queries { namespace data {
         }
 
         Point(float x, float y) : x_(x), y_(y) {
+        }
+
+        __device__ Point(const Point &other) : x_(other.x_), y_(other.y_) {
         }
 
         bool operator==(const Point &other) const {
@@ -28,14 +31,15 @@ namespace sl { namespace queries { namespace data {
         }
 
         __host__ __device__ float SquaredDistance(const Point &other) const {
-            return std::powf(x_ - other.x_, 2) + std::powf(y_ - other.y_, 2);
+            return (x_ - other.x_) * (x_ - other.x_) + (y_ - other.y_) * (y_ - other.y_);
+            //return std::powf(x_ - other.x_, 2) + std::powf(y_ - other.y_, 2);
         }
 
         float x_;
         float y_;
     };
 
-    struct WeightedPoint {
+    struct __align__(16) WeightedPoint {
 
         WeightedPoint() {}
 
@@ -47,7 +51,7 @@ namespace sl { namespace queries { namespace data {
             weight_(weight) {
         }
 
-        WeightedPoint(const WeightedPoint &other) :
+        __host__ __device__ WeightedPoint(const WeightedPoint &other) :
             point_(other.point_),
             weight_(other.weight_) {
         }
@@ -76,7 +80,8 @@ namespace sl { namespace queries { namespace data {
         }
 
         __host__ __device__ float SquaredDistance(const Point &other) const {
-            return point_.SquaredDistance(other) / (std::powf(weight_, 2));
+            //return point_.SquaredDistance(other) / (std::powf(weight_, 2));
+            return point_.SquaredDistance(other) / (weight_ * weight_);
         }
 
 

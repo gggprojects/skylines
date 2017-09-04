@@ -7,8 +7,8 @@ namespace sl { namespace common {
 
     class skylines_engine_DLL_EXPORTS SkylineElement : public error::ErrorHandler {
     public:
-        SkylineElement(const std::string &logger, const std::string &severity, error::ThreadErrors_ptr thread_errors) :
-            ErrorHandler(logger, severity, thread_errors) {
+        SkylineElement(const std::string &logger, const std::string &severity) :
+            ErrorHandler(logger, severity) {
         }
     };
 }}
