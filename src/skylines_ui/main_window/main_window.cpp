@@ -18,12 +18,10 @@ namespace sl { namespace ui { namespace main_window {
     MainWindow::MainWindow(QWidget *parent) :
         error::ErrorHandler("ui", "info"),
         QMainWindow(parent),
-        ui_(new Ui::MainWindow),
-        thread_errors_ptr_(sl::error::ThreadsErrors::Instanciate()) {
-        SetThreadErrors(thread_errors_ptr_);
-        weighted_query_ptr_ = std::make_shared<sl::queries::WeightedQuery>(thread_errors_ptr_);
+        ui_(new Ui::MainWindow) {
+        weighted_query_ptr_ = std::make_shared<sl::queries::WeightedQuery>();
         ui_->setupUi(this);
-        ogl_ = new ogl::OGLWidget(thread_errors_ptr_, weighted_query_ptr_, this);
+        ogl_ = new ogl::OGLWidget(weighted_query_ptr_, this);
         ui_->horizontalLayout_2->addWidget(ogl_);
         connect(ui_->pushButton_STS, &QPushButton::clicked, this, &MainWindow::RunSingleThreadSorting);
         connect(ui_->pushButton_STBF, &QPushButton::clicked, this, &MainWindow::RunSingleThreadBruteForce);

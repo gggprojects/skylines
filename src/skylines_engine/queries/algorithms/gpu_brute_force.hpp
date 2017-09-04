@@ -8,10 +8,8 @@ namespace sl { namespace queries { namespace algorithms {
     class GPUBruteForce : public Algorithm {
     public:
         GPUBruteForce(
-            error::ThreadErrors_ptr error_ptr, 
             const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q) :
-            Algorithm("GPUBruteForce", error_ptr, input_p, input_q),
-            gpu_devices_(error_ptr) {
+            Algorithm("GPUBruteForce", input_p, input_q) {
         }
 
     protected:

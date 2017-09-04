@@ -5,9 +5,8 @@
 
 namespace sl { namespace ui { namespace ogl {
     OGLWidget::OGLWidget(
-        error::ThreadErrors_ptr error_ptr,
         std::shared_ptr<sl::common::IRenderable> renderable_ptr, QWidget *parent) :
-        error::ErrorHandler("ogl", "info", error_ptr),
+        error::ErrorHandler("ogl", "info"),
         QOpenGLWidget(parent), renderable_ptr_(renderable_ptr), cursor_mode_(CursorMode::MOVE) {
     }
 

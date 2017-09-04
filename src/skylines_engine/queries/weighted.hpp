@@ -27,7 +27,7 @@ namespace sl { namespace queries {
             GPU_BRUTE_FORCE = 5
         };
 
-        WeightedQuery(error::ThreadErrors_ptr error_ptr);
+        WeightedQuery();
 
         void RunAlgorithm(AlgorithmType type);
 

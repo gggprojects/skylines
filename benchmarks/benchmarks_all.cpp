@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <functional>
+#include <map>
 
 #pragma warning(push, 0)
 #include <celero/Celero.h>
@@ -23,7 +24,7 @@ std::string GetFileName(const DataSize &ds) {
     return std::move(std::to_string(ds.input_p_size_) + "x" + std::to_string(ds.input_q_size_) + ".bin");
 }
 
-sl::queries::WeightedQuery wq(sl::error::ThreadsErrors::Instanciate());
+sl::queries::WeightedQuery wq;
 std::map<int64_t, DataSize> experiment_value_filename_map;
 
 void GenerateFile(size_t input_p_size, size_t input_q_size) {
@@ -39,8 +40,7 @@ void GenerateFiles() {
     GenerateFile(1000, 10);
     GenerateFile(5000, 10);
     GenerateFile(10000, 10);
-    GenerateFile(100000, 10);
-    GenerateFile(1000000, 10);
+    GenerateFile(50000, 10);
 }
 
 struct Experiment {
@@ -60,7 +60,7 @@ struct Experiment {
 std::string GetHeader(const std::vector<Experiment> &experiments) {
     std::string header = "Input size,Baseline (Brute force)";
     int pos = 1;
-    while (experiments[pos].experiment_ != "Baseline") {
+    while (pos < experiments.size() && experiments[pos].experiment_ != "Baseline") {
         header += ',' + experiments[pos].experiment_;
         pos++;
     }
@@ -105,6 +105,7 @@ void PreProcessFile(const std::string &filename) {
 
     replaceAll(&str, ",-nan(ind),", ",0,");
     replaceAll(&str, ",nan(ind),", ",0,");
+    replaceAll(&str, ",inf,", ",0,");
 
     std::ofstream t2(filename);
     t2 << str;
@@ -185,13 +186,13 @@ int main(int argc, char** argv) {
 class InitFromBinaryFileFixture : public celero::TestFixture {
 public:
 
-    InitFromBinaryFileFixture() : wq(sl::error::ThreadsErrors::Instanciate()) {
+    InitFromBinaryFileFixture() {
     }
 
     virtual std::vector<std::pair<int64_t, uint64_t>> getExperimentValues() const override {
         std::vector<std::pair<int64_t, uint64_t>> problemSpace;
 
-        std::vector<int> iterations { 80, 40, 10, 2, 1};
+        std::vector<int> iterations { 80, 40, 10, 2, 1 };
         std::vector<int>::iterator it = iterations.begin();
         for (const std::pair<int64_t, DataSize> &kvp : experiment_value_filename_map) {
             problemSpace.push_back(std::make_pair(kvp.first, *it));
@@ -211,6 +212,8 @@ public:
 protected:
     sl::queries::WeightedQuery wq;
 };
+
+std::map<std::string, std::vector<size_t>> results_test;
 
 BASELINE_F(SkylineComputation, Baseline, InitFromBinaryFileFixture, 5, 10) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE);

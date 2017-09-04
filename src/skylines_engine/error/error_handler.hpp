@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <unordered_map>
 #include <string.h>
 
 #pragma warning(push, 0)
@@ -10,8 +11,8 @@
 #pragma warning(pop)
 
 #include "export_import.hpp"
-#include "error/threads_errors.hpp"
 #include "error/error_descriptor.hpp"
+#include "error/thread_errors_stack.hpp"
 #include "log/logger.hpp"
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -34,17 +35,53 @@
 namespace sl { namespace error {
 
     class skylines_engine_DLL_EXPORTS ErrorHandler {
+    private:
+        class ThreadsErrors {
+        public:
+            ThreadsErrors(const ThreadsErrors &other) = delete;
+            ThreadsErrors(ThreadsErrors &&other) = delete;
+
+            ThreadsErrors& operator=(const ThreadsErrors &other) = delete;
+            ThreadsErrors& operator=(ThreadsErrors &&other) = delete;
+
+            static ThreadsErrors& GetInstance() {
+                static ThreadsErrors instance;  // Guaranteed to be destroyed.
+                                                // Instantiated on first use.
+                return instance;
+            }
+
+            void PushError(std::shared_ptr<ErrorDescriptor> err) {
+                std::lock_guard<std::mutex> lock_(map_mutex_);
+                thread_errors_map_[std::this_thread::get_id()].PushError(err);
+            }
+
+            ThreadErrorsStack GetErrors() {
+                ThreadErrorsStack tes;
+                std::lock_guard<std::mutex> lock_(map_mutex_);
+                auto it = thread_errors_map_.find(std::this_thread::get_id());
+                if (it != thread_errors_map_.end()) {
+                    tes = std::move(it->second);
+                    thread_errors_map_.erase(it);
+                }
+                return std::move(tes);
+            }
+        private:
+            ThreadsErrors() {}
+
+            std::mutex map_mutex_;
+            std::unordered_map<std::thread::id, ThreadErrorsStack> thread_errors_map_;
+        };
+
     public:
-        ErrorHandler(const std::string &logger, const std::string &severity, ThreadErrors_ptr thread_errors);
         ErrorHandler(const std::string &logger, const std::string &severity);
 
-        void PushError(ErrorDescriptor_ptr err) {
-            thread_errors_->PushError(err);
+        void PushError(std::shared_ptr<ErrorDescriptor> err) {
+            ThreadsErrors::GetInstance().PushError(err);
             LogError(err);
         }
 
         std::vector<std::string> GetErrors() {
-            return std::move(thread_errors_->GetErrors().GetErrors());
+            return std::move(ThreadsErrors::GetInstance().GetErrors().GetErrors());
         }
 
         template<class T>
@@ -67,15 +104,13 @@ namespace sl { namespace error {
             logger_ptr_->error("{0}:{1} {2}", file, line, argc);
         }
 
-        inline void LogError(ErrorDescriptor_ptr err) {
+        inline void LogError(std::shared_ptr<ErrorDescriptor> err) {
             logger_ptr_->error("{0}:{1} {2}", err->file_, err->line_, err->ErrorMessage());
         }
 
         void SetSeverity(std::string severity) {
             log::Logger::SetSeverity(logger_ptr_, severity);
         }
-
-        void SetThreadErrors(ThreadErrors_ptr thread_errors) { thread_errors_ = thread_errors; }
 
         void CudaCheck(cudaError_t result, char const *file, const int line) {
             if (result != cudaSuccess) {
@@ -86,7 +121,6 @@ namespace sl { namespace error {
             }
         }
     private:
-        ThreadErrors_ptr thread_errors_;
         log::Logger_ptr logger_ptr_;
     };
 }}

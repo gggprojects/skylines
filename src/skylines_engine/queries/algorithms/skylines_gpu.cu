@@ -3,24 +3,13 @@
 
 #include <cuda_runtime.h>
 
-#include "queries/data/data_structures.hpp"
 #include "gpu/gpu_memory.hpp"
+#include "queries/data/data_structures.hpp"
 #include "queries/algorithms/algorithm.cuh"
 
-/*
-MAX constant memory: 65536 bytes
-Size of sl::queries::data::Point = 8 bytes
-MAX input_q 65536 / 8 = 8192
-*/
 __constant__ sl::queries::data::Point device_input_q[8192];
 
-/*
-MAX shared memory per block = 49152 bytes
-Size of sl::queries::data::WeightedPoint = 12 bytes
-MAX shared_input_p 49152 / 12 = 4096
-*/
-
-#define SHARED_MEM_SIZE 32
+#define SHARED_MEM_SIZE 1024
 
 __global__ void ComputePartialSkyline(
     const sl::queries::data::WeightedPoint *input_p, 
@@ -30,23 +19,19 @@ __global__ void ComputePartialSkyline(
 
     __shared__ sl::queries::data::WeightedPoint shared_input_p[SHARED_MEM_SIZE];
 
-    int block_size = blockDim.x * blockDim.y;
-    int block_offset = blockIdx.x * block_size; // we just have one dimension grids
-    int block_pos = blockDim.x * threadIdx.y + threadIdx.x;
-    size_t global_pos = block_offset + block_pos;
+    int block_offset = blockIdx.x * blockDim.x; // we just have one dimension grids
+    size_t global_pos = block_offset + threadIdx.x;
 
-    const sl::queries::data::WeightedPoint &skyline_candidate = input_p[global_pos];
+    sl::queries::data::WeightedPoint skyline_candidate(input_p[global_pos]);
     bool is_skyline = global_pos < input_p_size;
 
     for (size_t current_input_p_pos = 0; current_input_p_pos < input_p_size; current_input_p_pos += SHARED_MEM_SIZE) {
-        //threads from the first line load to shared memory
-        if (threadIdx.y == 0) {
-            shared_input_p[threadIdx.x] = input_p[threadIdx.x + current_input_p_pos];
-        }
+        //all threads in the block loads to shared
+        shared_input_p[threadIdx.x] = input_p[threadIdx.x + current_input_p_pos];
         __syncthreads();
 
         if (is_skyline) {
-            //#pragma unroll SHARED_MEM_SIZE
+            #pragma unroll SHARED_MEM_SIZE
             for (int i = 0; i < SHARED_MEM_SIZE; i++) {
                 if (current_input_p_pos + i != global_pos) { // do not check against the same point
                     if (IsDominated_impl(skyline_candidate, shared_input_p[i], device_input_q, input_q_size)) {
@@ -88,31 +73,34 @@ extern "C" void ComputeGPUSkyline(
     sl::gpu::GPUStream gpu_stream;
 
     //copy to const memory the input Q
-    cudaMemcpyToSymbolAsync(device_input_q, input_q.data(), sizeof(float2) * input_q.size(), 0, cudaMemcpyKind::cudaMemcpyHostToDevice, gpu_stream());
+    cudaMemcpyToSymbolAsync(device_input_q, input_q.data(), sizeof(sl::queries::data::Point) * input_q.size(), 0, cudaMemcpyKind::cudaMemcpyHostToDevice, gpu_stream());
 
     size_t input_p_size = input_p.size();
     int input_q_size = static_cast<int>(input_q.size());
 
-    size_t input_p_size_32_multiple = roundUp<size_t>(input_p.size(), SHARED_MEM_SIZE);
+    size_t input_p_size_SHARED_MEM_SIZE_multiple = roundUp<size_t>(input_p.size(), SHARED_MEM_SIZE);
 
     //copy to global memory the input P
-    sl::gpu::GPUMemory<sl::queries::data::WeightedPoint> input_p_d(input_p_size_32_multiple);
+    sl::gpu::GPUMemory<sl::queries::data::WeightedPoint> input_p_d(input_p_size_SHARED_MEM_SIZE_multiple);
     input_p_d.UploadToDeviceAsync(input_p, gpu_stream); //the final values maybe empty
-    sl::gpu::GPUMemory<unsigned int> result_d(input_p_size_32_multiple);
 
+    size_t remaining_positions = input_p_size_SHARED_MEM_SIZE_multiple - input_p_size;
+    std::vector<sl::queries::data::WeightedPoint> remaining_points(remaining_positions, sl::queries::data::WeightedPoint(sl::queries::data::Point(2., 2.), 1));
+    input_p_d.UploadToDeviceAsync(remaining_points, input_p_size, gpu_stream);
+
+    sl::gpu::GPUMemory<unsigned int> result_d(input_p_size_SHARED_MEM_SIZE_multiple);
     /*
     MAX number of threads per MS is 2048.
-    MAX number of threads per block 1024 => max blockDim.y = 32
+    MAX number of threads per block 1024 => max blockDim.y = 1
     */
-    size_t num_rows = divUp<size_t>(input_p_size_32_multiple, SHARED_MEM_SIZE);
-    int num_rows_per_block = num_rows < 32 ? static_cast<int>(num_rows) : 32;
-    dim3 threadsPerBlock(32, num_rows_per_block);
+    dim3 threadsPerBlock(SHARED_MEM_SIZE, 1);
+    int total_numBlocks = static_cast<int>(divUp(input_p_size, static_cast<size_t>(threadsPerBlock.x * threadsPerBlock.y)));
+    dim3 grid(total_numBlocks, 1);
 
-    int numBlocks = static_cast<int>(divUp(input_p_size, static_cast<size_t>(threadsPerBlock.x * threadsPerBlock.y)));
-    ComputePartialSkyline<<< numBlocks, threadsPerBlock, SHARED_MEM_SIZE, gpu_stream() >>>(input_p_d(), input_p_size, input_q_size, result_d());
+    ComputePartialSkyline<<< grid, threadsPerBlock, 0, gpu_stream() >>>(input_p_d(), input_p_size, input_q_size, result_d());
 
     std::vector<unsigned int> result(input_p_size);
-    result_d.DownloadToHostAsync(result.data(), result.size(), gpu_stream);
+    result_d.DownloadToHostAsync(result.data(), input_p_size, gpu_stream);
     gpu_stream.Syncronize();
 
     for (size_t i = 0; i < result.size(); i++) {

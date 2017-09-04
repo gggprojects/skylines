@@ -46,7 +46,6 @@ namespace sl { namespace ui { namespace main_window {
         Ui::MainWindow *ui_;
         ogl::OGLWidget *ogl_;
 
-        sl::error::ThreadErrors_ptr thread_errors_ptr_;
         std::shared_ptr<sl::queries::WeightedQuery> weighted_query_ptr_;
     };
 }}}

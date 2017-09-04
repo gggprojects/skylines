@@ -7,9 +7,8 @@ namespace sl { namespace queries { namespace algorithms {
     class MultiThreadBruteForce : public Algorithm {
     public:
         MultiThreadBruteForce(
-            error::ThreadErrors_ptr error_ptr, 
             const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q) :
-            Algorithm("MultiThreadBruteForce", error_ptr, input_p, input_q) {
+            Algorithm("MultiThreadBruteForce", input_p, input_q) {
         }
 
     protected:

@@ -58,7 +58,7 @@ include_directories(SYSTEM "${APIS_PATH}/fast-cpp-csv-parser-master/include")
 
 #CUDA
 find_package(CUDA QUIET REQUIRED)
-LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_53 --gpu-code=compute_53)
+LIST(APPEND CUDA_NVCC_FLAGS -gencode=arch=compute_61,code=sm_61 --use_fast_math) #gpu-architecture == arch gpu-code == code
 LIST(APPEND CUDA_NVCC_FLAGS_DEBUG -g -G)
 CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/skylines_engine)
 set(CUDA_VERBOSE_BUILD ON CACHE BOOL "" FORCE)

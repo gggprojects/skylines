@@ -9,7 +9,7 @@ namespace sl { namespace gpu {
 
     class GPUDevices : common::SkylineElement {
     public:
-        GPUDevices(error::ThreadErrors_ptr error_ptr);
+        GPUDevices();
         void PrintGPUsInfo();
     private:
         static std::vector<int> devices_ids_;

@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "queries/algorithms/multi_thread_brute_force.hpp"
 
 namespace sl { namespace queries { namespace algorithms {
@@ -11,6 +13,7 @@ namespace sl { namespace queries { namespace algorithms {
         std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate,
         NonConstData<data::WeightedPoint> *output) {
 
+        size_t i = 0;
         for (std::vector<data::WeightedPoint>::const_iterator skyline_candidate = first_skyline_candidate; skyline_candidate != last_skyline_candidate; ++skyline_candidate) {
             std::vector<data::WeightedPoint>::const_iterator dominator_candidate = input_p_.GetPoints().cbegin();
             bool is_skyline = true;

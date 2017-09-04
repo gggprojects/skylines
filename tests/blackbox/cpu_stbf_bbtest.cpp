@@ -7,6 +7,7 @@
 
 #include "queries/weighted.hpp"
 #include "export_import.hpp"
+#include "time_utils.hpp"
 
 struct InputParameters {
     int num_points_p_;
@@ -21,7 +22,7 @@ public:
 
 class InputInitializer : public ::testing::TestWithParam<InputParameters> {
 public:
-    InputInitializer() : wq(sl::error::ThreadsErrors::Instanciate()) {
+    InputInitializer() {
     }
 
     virtual void SetUp() {
@@ -37,7 +38,10 @@ protected:
     sl::queries::WeightedQuery wq;
 };
 
-void CheckOuput(sl::queries::NonConstData<sl::queries::data::WeightedPoint> &a, sl::queries::NonConstData<sl::queries::data::WeightedPoint> &b, int line) {
+class InputInitializerSmall : public InputInitializer { };
+class InputInitializerBig : public InputInitializer { };
+
+bool CheckOuput(sl::queries::NonConstData<sl::queries::data::WeightedPoint> &a, sl::queries::NonConstData<sl::queries::data::WeightedPoint> &b, int line) { // we pass a copy
     auto sorting_function = [](const sl::queries::data::WeightedPoint &a, const sl::queries::data::WeightedPoint &b) -> bool {
         if (a.point_.x_ < b.point_.x_) return true;
         else {
@@ -50,59 +54,98 @@ void CheckOuput(sl::queries::NonConstData<sl::queries::data::WeightedPoint> &a, 
     std::sort(b.Points().begin(), b.Points().end(), sorting_function);
 
     EXPECT_EQ(a.Points().size(), b.Points().size()) << " Line: " << line;
-    if (a.Points().size() == b.Points().size()) {
-        EXPECT_TRUE(std::equal(a.Points().begin(), a.Points().end(), b.Points().begin())) << " Line: " << line;
+    if (a.Points().size() != b.Points().size()) {
+        return false;
     }
+    bool equal = std::equal(a.Points().begin(), a.Points().end(), b.Points().begin());
+    EXPECT_TRUE(equal) << " Line: " << line;
+    return equal;
 }
 
-TEST_P(InputInitializer, TestOutputCorrectness) {
+long long RunAlgorithm(
+    sl::queries::WeightedQuery &wq,
+    sl::queries::WeightedQuery::AlgorithmType alg_type,
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> *output) {
 
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE);
+    long long time_taken = sl::time::measure<>::execution([&wq, &alg_type]() {
+        wq.RunAlgorithm(alg_type);
+    });
+
+    *output = wq.GetOuput(); // we do a copy
+    wq.ClearOutput();
+
+    std::cout << "\nTime(ms): " << time_taken << ". Ouput size: " << output->GetPoints().size();
+    return time_taken;
+}
+
+void RunAlgorithmAndCompareWithPrevious(
+    sl::queries::WeightedQuery &wq,
+    sl::queries::WeightedQuery::AlgorithmType alg_type,
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> *output,
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> &previous_ouput,
+    int line = __LINE__) {
+
+    long long time_taken = RunAlgorithm(wq, alg_type, output);
+
+    bool equal = CheckOuput(previous_ouput, *output, line);
+
+    std::cout << (equal ? " EQUAL" : " DIFFERENT");
+}
+
+TEST_P(InputInitializerSmall, TestOutputCorrectness) {
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> stbf_output;
-    stbf_output = wq.GetOuput();
+    RunAlgorithm(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, &stbf_output);
 
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> stbfd_output;
-    stbfd_output = wq.GetOuput();
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING, &stbfd_output, stbf_output);
 
-    CheckOuput(stbf_output, stbfd_output, __LINE__);
-
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> sts_output;
-    sts_output = wq.GetOuput();
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, &sts_output, stbfd_output);
 
-    CheckOuput(stbfd_output, sts_output, __LINE__);
-
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> mtbf_output;
-    mtbf_output = wq.GetOuput();
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, &mtbf_output, sts_output);
 
-    CheckOuput(sts_output, mtbf_output, __LINE__);
-
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> mts_output;
-    mts_output = wq.GetOuput();
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, &mts_output, mtbf_output);
 
-    CheckOuput(stbf_output, mts_output, __LINE__);
-
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> gpubf_output;
-    gpubf_output = wq.GetOuput();
-
-    CheckOuput(gpubf_output, stbf_output, __LINE__);
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, &gpubf_output, mts_output);
 }
 
-INSTANTIATE_TEST_CASE_P(InstantiationName, InputInitializer, ::testing::Values(
+TEST_P(InputInitializerBig, TestOutputCorrectness) {
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> mtbf_output;
+    RunAlgorithm(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, &mtbf_output);
+
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> gpubf_output;
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, &gpubf_output, mtbf_output);
+}
+
+//TEST_P(InputInitializer, TestOutputCorrectness) {
+//    //sl::queries::NonConstData<sl::queries::data::WeightedPoint> output;
+//    //RunAlgorithm(wq, sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, &output);
+//}
+
+INSTANTIATE_TEST_CASE_P(InstantiationName, InputInitializerSmall, ::testing::Values(
     InputParameters(0, 0),
     InputParameters(0, 1),
     InputParameters(1, 0),
     InputParameters(1, 1),
     InputParameters(10, 10),
     InputParameters(32, 10),
+    InputParameters(33, 10),
     InputParameters(64, 10),
+    InputParameters(65, 10),
     InputParameters(100, 10),
     InputParameters(128, 10),
     InputParameters(1000, 10),
     InputParameters(1024, 10),
-    InputParameters(10, 1000)
+    InputParameters(1025, 10),
+    InputParameters(2048, 10),
+    InputParameters(2049, 10)
+));
+
+INSTANTIATE_TEST_CASE_P(InstantiationName, InputInitializerBig, ::testing::Values(
+    InputParameters(10000, 10),
+    InputParameters(20000, 10),
+    InputParameters(100000, 10)
 ));

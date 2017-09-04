@@ -16,7 +16,6 @@ namespace sl { namespace queries { namespace algorithms {
     public:
         Algorithm(
             const std::string &logger,
-            error::ThreadErrors_ptr error_ptr,
             const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q);
 
         virtual void Run(NonConstData<data::WeightedPoint> *output) = 0;

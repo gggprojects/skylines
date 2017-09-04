@@ -26,7 +26,6 @@ namespace sl { namespace ui { namespace ogl {
 
     public:
         OGLWidget(
-            error::ThreadErrors_ptr error_ptr,
             std::shared_ptr<sl::common::IRenderable> renderable_ptr, QWidget *parent = 0);
         ~OGLWidget();
 

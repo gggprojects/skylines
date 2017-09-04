@@ -9,8 +9,8 @@ namespace sl { namespace gpu {
 
     std::vector<int> GPUDevices::devices_ids_;
 
-    GPUDevices::GPUDevices(error::ThreadErrors_ptr error_ptr) :
-        common::SkylineElement("GPUDevices", "info", error_ptr) {
+    GPUDevices::GPUDevices() :
+        common::SkylineElement("GPUDevices", "info") {
         int num_devices;
         CUDA_CHECK(cudaGetDeviceCount(&num_devices));
     }
