@@ -192,7 +192,7 @@ public:
     virtual std::vector<std::pair<int64_t, uint64_t>> getExperimentValues() const override {
         std::vector<std::pair<int64_t, uint64_t>> problemSpace;
 
-        std::vector<int> iterations { 80, 40, 10, 2, 1 };
+        std::vector<int> iterations { 1, 1, 1, 1, 1 };
         std::vector<int>::iterator it = iterations.begin();
         for (const std::pair<int64_t, DataSize> &kvp : experiment_value_filename_map) {
             problemSpace.push_back(std::make_pair(kvp.first, *it));
@@ -215,26 +215,26 @@ protected:
 
 std::map<std::string, std::vector<size_t>> results_test;
 
-BASELINE_F(SkylineComputation, Baseline, InitFromBinaryFileFixture, 5, 10) {
+BASELINE_F(SkylineComputation, Baseline, InitFromBinaryFileFixture, 1, 1) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE);
 }
 
-BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarting, InitFromBinaryFileFixture, 5, 10) {
+BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarting, InitFromBinaryFileFixture, 1, 1) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING);
 }
 
-BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 5, 10) {
+BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 1, 1) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING);
 }
 
-BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
+BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 1, 1) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE);
 }
 
-BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
+BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 1, 1) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING);
 }
 
-BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 5, 10) {
+BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 1, 1) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
 }

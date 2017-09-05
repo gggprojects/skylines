@@ -26,11 +26,11 @@ namespace sl { namespace queries { namespace data {
             return x_ == other.x_ && y_ == other.y_;
         }
 
-        __host__ __device__ float Distance(const Point &other) const {
+        __host__ __device__ inline float Distance(const Point &other) const {
             return std::sqrtf(SquaredDistance(other));
         }
 
-        __host__ __device__ float SquaredDistance(const Point &other) const {
+        __host__ __device__ inline float SquaredDistance(const Point &other) const {
             return (x_ - other.x_) * (x_ - other.x_) + (y_ - other.y_) * (y_ - other.y_);
             //return std::powf(x_ - other.x_, 2) + std::powf(y_ - other.y_, 2);
         }
@@ -75,11 +75,11 @@ namespace sl { namespace queries { namespace data {
             return !(*this == other);
         }
 
-        __host__ __device__ float Distance(const Point &other) const {
+        __host__ __device__ inline float Distance(const Point &other) const {
             return point_.Distance(other) * weight_;
         }
 
-        __host__ __device__ float SquaredDistance(const Point &other) const {
+        __host__ __device__ inline float SquaredDistance(const Point &other) const {
             //return point_.SquaredDistance(other) / (std::powf(weight_, 2));
             return point_.SquaredDistance(other) / (weight_ * weight_);
         }

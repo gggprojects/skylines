@@ -37,8 +37,13 @@ void GenerateFile(size_t input_p_size, size_t input_q_size) {
 
 void GenerateFiles() {
     GenerateFile(10000, 10);
+    GenerateFile(25000, 10);
+    GenerateFile(50000, 10);
+    GenerateFile(75000, 10);
     GenerateFile(100000, 10);
+    GenerateFile(250000, 10);
     GenerateFile(500000, 10);
+    GenerateFile(750000, 10);
     GenerateFile(1000000, 10);
 }
 
