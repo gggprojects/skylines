@@ -1,5 +1,9 @@
+#pragma warning(push, 0)
 #include <QMouseEvent>
 #include <QCoreApplication>
+
+#include <freeglut/GL/freeglut.h>
+#pragma warning(pop)
 
 #include "ogl/ogl_widget.hpp"
 
@@ -26,6 +30,10 @@ namespace sl { namespace ui { namespace ogl {
 
         glClearColor(1, 1, 1, 1);
         glEnable(GL_DEPTH_TEST);
+
+        int argc = 0;
+        char *argv = nullptr;
+        glutInit(&argc, &argv);
     }
 
     void OGLWidget::Cleanup() {

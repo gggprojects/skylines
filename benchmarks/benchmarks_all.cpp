@@ -36,11 +36,13 @@ void GenerateFile(size_t input_p_size, size_t input_q_size) {
 }
 
 void GenerateFiles() {
-    GenerateFile(500, 10);
-    GenerateFile(1000, 10);
-    GenerateFile(5000, 10);
-    GenerateFile(10000, 10);
-    GenerateFile(50000, 10);
+    GenerateFile(500, 100);
+    GenerateFile(1000, 100);
+    GenerateFile(2000, 100);
+    GenerateFile(5000, 100);
+    GenerateFile(10000, 100);
+    GenerateFile(20000, 100);
+    GenerateFile(50000, 100);
 }
 
 struct Experiment {
@@ -192,7 +194,7 @@ public:
     virtual std::vector<std::pair<int64_t, uint64_t>> getExperimentValues() const override {
         std::vector<std::pair<int64_t, uint64_t>> problemSpace;
 
-        std::vector<int> iterations { 1, 1, 1, 1, 1 };
+        std::vector<int> iterations { 100, 80, 50, 30, 10, 5, 1 };
         std::vector<int>::iterator it = iterations.begin();
         for (const std::pair<int64_t, DataSize> &kvp : experiment_value_filename_map) {
             problemSpace.push_back(std::make_pair(kvp.first, *it));
@@ -215,26 +217,26 @@ protected:
 
 std::map<std::string, std::vector<size_t>> results_test;
 
-BASELINE_F(SkylineComputation, Baseline, InitFromBinaryFileFixture, 1, 1) {
+BASELINE_F(SkylineComputation, SingleThreadBruteForce, InitFromBinaryFileFixture, 1, 5) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE);
 }
 
-BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarting, InitFromBinaryFileFixture, 1, 1) {
+BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarting, InitFromBinaryFileFixture, 1, 5) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING);
 }
 
-BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 1, 1) {
+BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 1, 5) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING);
 }
 
-BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 1, 1) {
+BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 1, 5) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE);
 }
 
-BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 1, 1) {
+BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 1, 5) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING);
 }
 
-BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 1, 1) {
+BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 1, 5) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
 }

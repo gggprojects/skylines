@@ -53,6 +53,11 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS})
 #opengl
 set(LIBS ${LIBS} ${OPENGL_LIBRARIES})
 
+#freeglut
+include_directories("${APIS_PATH}/freeglut-3.0/include")
+link_directories("${APIS_PATH}/freeglut-3.0/lib/x64")
+set(LIBS ${LIBS} freeglut)
+
 # CSV parser
 include_directories(SYSTEM "${APIS_PATH}/fast-cpp-csv-parser-master/include")
 
@@ -69,6 +74,9 @@ if(WIN32)
 	set(DEPENDENCY_LIBS_AND_FILES
 	   #cuda
 	   "${CUDA_TOOLKIT_ROOT_DIR}/bin/cudart64_80.dll"
+	   
+	   #freeglut
+       "${APIS_PATH}/freeglut-3.0/bin/x64/freeglut.dll"
 	)
     set(DEPENDENCY_LIBS_AND_FILES_DEBUG_SPECIFIC
        #gtest

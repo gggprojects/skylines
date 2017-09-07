@@ -43,7 +43,8 @@ namespace sl { namespace queries { namespace data {
 
         WeightedPoint() {}
 
-        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1) {
+        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), static_cast<float>(r.Next())) {
+        //WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1.) {
         }
 
         WeightedPoint(const Point &point, float weight) :
@@ -76,11 +77,10 @@ namespace sl { namespace queries { namespace data {
         }
 
         __host__ __device__ inline float Distance(const Point &other) const {
-            return point_.Distance(other) * weight_;
+            return point_.Distance(other) / weight_;
         }
 
         __host__ __device__ inline float SquaredDistance(const Point &other) const {
-            //return point_.SquaredDistance(other) / (std::powf(weight_, 2));
             return point_.SquaredDistance(other) / (weight_ * weight_);
         }
 
