@@ -13,8 +13,8 @@ namespace sl { namespace queries { namespace algorithms {
         }
 
     protected:
-        void Run(NonConstData<data::WeightedPoint> *output) final;
-        void Compute(NonConstData<data::WeightedPoint> *output);
+        void Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) final;
+        void Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type);
 
         gpu::GPUDevices gpu_devices_;
     };

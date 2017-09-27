@@ -10,23 +10,26 @@
 #include "queries/data.hpp"
 #include "common/skyline_element.hpp"
 #include "queries/algorithms/algorithm.cuh"
+#include "queries/algorithms/distance_type.hpp"
 
 namespace sl { namespace queries { namespace algorithms {
+
     class Algorithm : public common::SkylineElement {
     public:
         Algorithm(
             const std::string &logger,
             const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q);
 
-        virtual void Run(NonConstData<data::WeightedPoint> *output) = 0;
+        virtual void Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) = 0;
 
-
-        inline bool static IsDominated(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q) {
-            return IsDominated_impl(a, b, q.data(), static_cast<int>(q.size()));
+        template<class Comparator>
+        inline bool static IsDominated(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q, Comparator comparator_function) {
+            return IsDominated_impl(a, b, q.data(), static_cast<int>(q.size()), comparator_function);
         }
 
-        inline int static Dominator(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q) {
-            return Dominator_impl(a, b, q.data(), static_cast<int>(q.size()));
+        template<class Comparator>
+        inline int static Dominator(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q, Comparator comparator_function) {
+            return Dominator_impl(a, b, q.data(), static_cast<int>(q.size()), comparator_function);
         }
 
     protected:

@@ -1,8 +1,10 @@
 #ifndef SKYLINES_OGL_CAMERA_HPP
 #define SKYLINES_OGL_CAMERA_HPP
 
+#pragma warning(push, 0)
 #include <QMatrix4x4>
 #include <QVector2D>
+#pragma warning(pop)
 
 namespace sl { namespace ui { namespace ogl {
 

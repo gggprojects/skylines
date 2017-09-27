@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 
+#pragma warning(push, 0)
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QVector2D>
@@ -9,6 +10,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/prettywriter.h>
+#pragma warning(pop)
 
 #include "main_window.hpp"
 #include "ui_main_window.h"
@@ -18,7 +20,8 @@ namespace sl { namespace ui { namespace main_window {
     MainWindow::MainWindow(QWidget *parent) :
         error::ErrorHandler("ui", "info"),
         QMainWindow(parent),
-        ui_(new Ui::MainWindow) {
+        ui_(new Ui::MainWindow),
+        distance_type_(queries::algorithms::DistanceType::Neartest) {
         weighted_query_ptr_ = std::make_shared<sl::queries::WeightedQuery>();
         ui_->setupUi(this);
         ogl_ = new ogl::OGLWidget(weighted_query_ptr_, this);
@@ -41,6 +44,7 @@ namespace sl { namespace ui { namespace main_window {
         connect(ogl_, &ogl::OGLWidget::Painted, this, &MainWindow::Render);
         connect(ui_->listWidget_points, &QListWidget::itemSelectionChanged, this, &MainWindow::UpdateRender);
         connect(ui_->listWidget_points, &QListWidget::itemDoubleClicked, this, &MainWindow::RemoveSelectedPoint);
+        connect(ui_->radioButton_Neartest, &QRadioButton::toggled, this, &MainWindow::DistanceTypeChanged);
     }
 
     MainWindow::~MainWindow() {
@@ -48,32 +52,32 @@ namespace sl { namespace ui { namespace main_window {
     }
 
     void MainWindow::RunSingleThreadBruteForce() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE);
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type_);
         ogl_->update();
     }
 
     void MainWindow::RunSingleThreadBruteForceWithDiscarting() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING);
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING, distance_type_);
         ogl_->update();
     }
 
     void MainWindow::RunSingleThreadSorting() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING);
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type_);
         ogl_->update();
     }
 
     void MainWindow::RunMultiThreadBruteForce() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE);
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type_);
         ogl_->update();
     }
 
     void MainWindow::RunMultiThreadSorting() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING);
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type_);
         ogl_->update();
     }
 
     void MainWindow::RunGPUBruteForce() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type_);
         ogl_->update();
     }
 
@@ -177,5 +181,9 @@ namespace sl { namespace ui { namespace main_window {
             const queries::data::WeightedPoint &wp_b = weighted_query_ptr_->GetInputP().GetPoints()[b_pos];
             ogl_->PaintBisector(QVector2D(wp_a.point_.x_, wp_a.point_.y_), QVector2D(wp_b.point_.x_, wp_b.point_.y_));
         }
+    }
+
+    void MainWindow::DistanceTypeChanged(bool checked) {
+        distance_type_ = checked ? queries::algorithms::DistanceType::Neartest : queries::algorithms::DistanceType::Furthest;
     }
 }}}

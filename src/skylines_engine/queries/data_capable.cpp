@@ -58,7 +58,7 @@ namespace sl { namespace queries {
         for (rapidjson::SizeType i = 0; i < p.Size(); i++) {
             float x = p[i]["x"].GetFloat();
             float y = p[i]["y"].GetFloat();
-            float weight = p[i]["w"].GetFloat();
+            int weight = p[i]["w"].GetInt();
             input_p_.Add(data::WeightedPoint(data::Point(x, y), weight));
         }
 
@@ -67,7 +67,6 @@ namespace sl { namespace queries {
             float x = q[i]["x"].GetFloat();
             float y = q[i]["y"].GetFloat();
             input_q_.Add(data::Point(x, y));
-
         }
         return true;
     }

@@ -3,9 +3,11 @@
 
 #include <memory>
 
+#pragma warning(push, 0)
 #include <QWidget>
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
+#pragma warning(pop)
 
 #include "ogl/camera.hpp"
 #include "common/irenderable.hpp"

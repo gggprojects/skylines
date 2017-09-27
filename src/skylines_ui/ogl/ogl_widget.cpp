@@ -80,7 +80,7 @@ namespace sl { namespace ui { namespace ogl {
         int numDegrees = event->delta();
         QVector4D ortho = camera_.GetOrtographic();
         float proportion = ortho.y() - ortho.x();
-        float numSteps = ((numDegrees / 15.0)*0.008)*proportion;
+        float numSteps = ((numDegrees / 15.0f)*0.008f)*proportion;
         camera_.Zoom(numSteps);
         update();
     }
@@ -114,8 +114,8 @@ namespace sl { namespace ui { namespace ogl {
     }
 
     QVector3D OGLWidget::Unproject(const QVector2D &screen_point) {
-        double x = 2.0 * screen_point.x() / 1024 - 1;
-        double y = -2.0 * screen_point.y() / 1024 + 1;
+        float x = 2.0f * screen_point.x() / 1024 - 1;
+        float y = -2.0f * screen_point.y() / 1024 + 1;
         return std::move(camera_.Unproject(QVector2D(x, y)));
     }
 }}}
