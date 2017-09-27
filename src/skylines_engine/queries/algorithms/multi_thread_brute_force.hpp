@@ -12,12 +12,19 @@ namespace sl { namespace queries { namespace algorithms {
         }
 
     protected:
+        template<class Comparator>
         void ComputeSingleThreadBruteForce(
             std::vector<data::WeightedPoint>::const_iterator first_skyline_candidate,
             std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate,
-            NonConstData<data::WeightedPoint> *output);
-        void Run(NonConstData<data::WeightedPoint> *output) final;
-        void Compute(NonConstData<data::WeightedPoint> *output);
+            NonConstData<data::WeightedPoint> *output,
+            Comparator comparator_function);
+
+
+        void Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) final;
+        void Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type);
+
+        template<class Comparator>
+        void _Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output);
     };
 }}}
 

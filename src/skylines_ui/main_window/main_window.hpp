@@ -1,8 +1,10 @@
 #ifndef SKYLINES_MAINWINDOW_HPP
 #define SKYLINES_MAINWINDOW_HPP
 
+#pragma warning(push, 0)
 #include <QMainWindow>
 #include <QListWidgetItem>
+#pragma warning(pop)
 
 #include "ogl/ogl_widget.hpp"
 #include "queries/weighted.hpp"
@@ -42,9 +44,11 @@ namespace sl { namespace ui { namespace main_window {
         void PointSelected(int x, int y);
 
         void RemoveSelectedPoint(QListWidgetItem *item);
+        void DistanceTypeChanged(bool checked);
 
         Ui::MainWindow *ui_;
         ogl::OGLWidget *ogl_;
+        queries::algorithms::DistanceType distance_type_;
 
         std::shared_ptr<sl::queries::WeightedQuery> weighted_query_ptr_;
     };

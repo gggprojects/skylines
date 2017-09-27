@@ -36,15 +36,14 @@ void GenerateFile(size_t input_p_size, size_t input_q_size) {
 }
 
 void GenerateFiles() {
-    GenerateFile(10000, 10);
-    GenerateFile(25000, 10);
-    GenerateFile(50000, 10);
-    GenerateFile(75000, 10);
     GenerateFile(100000, 10);
     GenerateFile(250000, 10);
     GenerateFile(500000, 10);
     GenerateFile(750000, 10);
     GenerateFile(1000000, 10);
+    GenerateFile(2000000, 10);
+    GenerateFile(5000000, 10);
+    GenerateFile(10000000, 10);
 }
 
 struct Experiment {
@@ -220,13 +219,9 @@ protected:
 std::map<std::string, std::vector<size_t>> results_test;
 
 BASELINE_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 1, 1) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE);
-}
-
-BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 1, 1) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE);
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, sl::queries::algorithms::DistanceType::Neartest);
 }
 
 BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 1, 1) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE);
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, sl::queries::algorithms::DistanceType::Neartest);
 }

@@ -1,6 +1,10 @@
 #include "ogl/camera.hpp"
+
+#pragma warning(push, 0)
 #include <QOpenGLFunctions>
+
 #include <GL/glu.h>
+#pragma warning(pop)
 
 namespace sl { namespace ui { namespace ogl {
     Camera::Camera() {

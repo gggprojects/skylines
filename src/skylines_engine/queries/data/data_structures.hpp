@@ -32,6 +32,8 @@ namespace sl { namespace queries { namespace data {
 
         __host__ __device__ inline float SquaredDistance(const Point &other) const {
             return (x_ - other.x_) * (x_ - other.x_) + (y_ - other.y_) * (y_ - other.y_);
+            //fast-math in CUDA computes __powf(x,y) as __exp2f(y * __log2f(x))
+            //the log2 of a negative number causes an error.
             //return std::powf(x_ - other.x_, 2) + std::powf(y_ - other.y_, 2);
         }
 
@@ -41,13 +43,15 @@ namespace sl { namespace queries { namespace data {
 
     struct __align__(16) WeightedPoint {
 
+        #define MAX_WEIGHT 10
+
         WeightedPoint() {}
 
-        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), static_cast<float>(r.Next())) {
-        //WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1.) {
+        //WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), static_cast<int>(r.Next() * 10) % 10) {
+        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1) {
         }
 
-        WeightedPoint(const Point &point, float weight) :
+        WeightedPoint(const Point &point, int weight) :
             point_(point),
             weight_(weight) {
         }
@@ -57,11 +61,12 @@ namespace sl { namespace queries { namespace data {
             weight_(other.weight_) {
         }
 
-        bool IsDominated(const WeightedPoint &other, const std::vector<Point> &q) const {
+        template<class Comparator>
+        bool IsDominated(const WeightedPoint &other, const std::vector<Point> &q, Comparator comparator) const {
             for (const Point p_q : q) {
                 float distance = Distance(p_q);
                 float other_distance = other.Distance(p_q);
-                if (distance <= other_distance) {
+                if (comparator(distance, other_distance)) {
                     return false;
                 }
             }
@@ -77,16 +82,16 @@ namespace sl { namespace queries { namespace data {
         }
 
         __host__ __device__ inline float Distance(const Point &other) const {
-            return point_.Distance(other) / weight_;
+            return point_.Distance(other) * weight_;
         }
 
         __host__ __device__ inline float SquaredDistance(const Point &other) const {
-            return point_.SquaredDistance(other) / (weight_ * weight_);
+            return point_.SquaredDistance(other) * (weight_ * weight_);
         }
 
 
         Point point_;
-        float weight_;
+        int weight_;
     };
 }}}
 

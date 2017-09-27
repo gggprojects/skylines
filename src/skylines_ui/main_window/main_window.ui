@@ -172,6 +172,27 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout">
              <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <item>
+                <widget class="QRadioButton" name="radioButton_Neartest">
+                 <property name="text">
+                  <string>Nearest</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radioButton_Furthest">
+                 <property name="text">
+                  <string>Furthest</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
               <widget class="QPushButton" name="pushButton_STBF">
                <property name="text">
                 <string>Single thread brute force</string>
