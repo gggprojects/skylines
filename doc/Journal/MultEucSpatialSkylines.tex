@@ -142,7 +142,7 @@ Given a set $P$ of $n$ data points and a set $Q$ of $m$ query points in the plan
 
 \begin{figure}[!htp]
 \begin{center}
-\includegraphics[width=9cm]{SSQExample1.eps}
+\includegraphics[width=9cm]{img/SSQExample1.eps}
 \caption{Nearest spatial skyline hotels: $h_1$, $h_2$ and $h_4$. \TONI{Cal revisar Figura}}
 \label{fig:NSSQExample1}
 \end{center}
@@ -155,7 +155,7 @@ Analogously, given a set $P$ of $n$ data points and a set $Q$ of $m$ query point
 
 \begin{figure}[!htp]
 \begin{center}
-\includegraphics[width=9cm]{FarthestSkylineExample.eps}
+\includegraphics[width=9cm]{img/FarthestSkylineExample.eps}
 \caption{Farthest spatial skyline parks: $p_3$, $p_6$ and $p_7$. \TONI{Cal revisar Figura}}
 \label{fig:FSSQExample1}
 \end{center}
@@ -167,6 +167,30 @@ Analogously, given a set $P$ of $n$ data points and a set $Q$ of $m$ query point
 \vspace{1em}
 To the best of our knowledge, spatial skyline queries have been studied considering Euclidean and Manhattan distances, but ignoring the importance of data points of $P$ (e.g., hotels, shops, garbage dumps, business competitors). However, in practice the different importance of data points, either attractiveness or repulsiveness, must be taken into account. To this purpose, a weight is assigned to each point of $P$ to represent its importance. Experts take available information about different factors related to the data point, for instance the price and services of a hotel, and then aggregate these factors in a unique weight \cite{Dre94,DD02}.
 To reflect that skyline points are determined depending on distance and importance, according to the model presented in \cite{BS97}, we associate to each data point of $P$ a weighted distance that is the product of the Euclidean distance and the inverse of the data point weight.
+
+
+\subsection{Top-$k$ Nearest and Farthest Spatial Skyline Queries}
+
+The nearest/farthest skyline of a point set $P$ with respect to a query set $Q$ provides a useful method to get relevant objects of $P$, but the resulting set of skyline objects can be as large as $P$ itself. However, in practice, many times it is sufficient and desirable to identify a small number of points among the skyline points. So it is more reasonable to require users to specify some ranking function $f$, that reflects the relevance of each point in the skyline, and to retrieve the subset of the best (lowest/highest scores) $k$ skyline objects with respect to $f$ for small $k$.
+
+\vspace{1em}
+We say a scoring function $f$ is monotone if and only if for any two points $p$,$ p'$, such that $d_p(q) \le d_{p'}(q)$ for every $q \in Q$, implies $f(p) \le f(p')$.  Typical monotone scoring functions are: 
+
+\vspace{1em}
+\begin{itemize}
+\item $\delta_{max}(p) = \max_{q \in Q} d_p(q)$,  
+\item $\delta_{min}(p) = \min_{q \in Q} d_p(q)$, 
+\item $\delta_{sum}(p) = \sum_{q \in Q} d_p(q)$.
+\end{itemize}
+
+\vspace{1em}
+Pel cas de nearest/farthest caldria buscar  els $k$ valors de $\delta_{max}(p)$ / $\delta_{min}(p)$ mes petits/grans.
+
+\vspace{1em}
+Reference:
+Wanbin Son, Fabian Stehn, Christian Knauer, Hee-Kap Ahn.
+Top-kManhattan spatial skyline queries.
+Information Processing Letters, 123, pp 27-35, 2017.
 
 \subsection{Related work}
 
@@ -187,9 +211,9 @@ As an example, in Figure~\ref{fig:k-dissimilarity} we have a set $S$ of seven po
 
 \begin{figure}[!htp]
 \begin{center}
-\includegraphics[width=0.4\linewidth]{knnExample.eps} \hspace{-0.5em} a) %k-dissimilarity.eps}
+\includegraphics[width=0.4\linewidth]{img/knnExample.eps} \hspace{-0.5em} a) %k-dissimilarity.eps}
 \qquad
-\includegraphics[width=0.4\linewidth]{knnExampleWeights.eps} \; b)
+\includegraphics[width=0.4\linewidth]{img/knnExampleWeights.eps} \; b)
 \caption{a) Euclidean distances; b) multiplicative weighted Euclidean distances.}
 \label{fig:k-dissimilarity}
 \end{center}
@@ -233,7 +257,7 @@ The nearest regions $r(p_i,p_j)$ and $r(p_j,p_i)$ are the exterior and interior 
 \vspace{2em}
 \begin{figure}[!htp]
 \begin{center}
-\includegraphics[width=0.55\linewidth]{BisectorCircles.eps}
+\includegraphics[width=0.55\linewidth]{img/BisectorCircles.eps}
 \caption{Bisector circles for several ratios $k=w_{p_i}/w_{p_j}$.}
 \label{fig:BisectorCircles}
 \end{center}
@@ -279,7 +303,7 @@ the set $P$ with respect to $Q$.
 
 \begin{figure}[!htp]
 \begin{center}
-\includegraphics[width=0.8\linewidth]{DomNotDom.eps}
+\includegraphics[width=0.8\linewidth]{img/DomNotDom.eps}
 \caption{a) If $CH(Q) \subset r(p_i, p_j)$ then $p_i$ spatially dominates from near $p_j$ and $p_j$ spatially dominates from far $p_i$; b) If $CH(Q) \subset r(p_j, p_i)$ then $p_j$ spatially dominates from near $p_i$ and $p_i$ spatially dominates from far $p_j$.}
 %\vspace{-0.5em}
 \label{fig:DomNotDom}
@@ -408,7 +432,7 @@ However, previous Lemmas 1-4 do not hold for Multiplicative weighted Euclidean d
 
 \begin{figure}[!htp]
 \begin{center}
-\includegraphics[width=0.4\linewidth]{NFOnlyE.eps}
+\includegraphics[width=0.4\linewidth]{img/NFOnlyE.eps}
 \caption{a) Point $p_i$ dominates from near $p_j$ with respect to $E(Q)$, but $p_j$ is not dominated from near by $p_i$ with respect to $Q$. Point $p_j$ dominates from far $p_i$ with respect to $E(Q)$, but $p_i$ is not dominated from far by $p_j$ with respect to $Q$. b) We have $E(Q) \subset r(p_i, p_j)$, but $p_i$ does not spatially dominates from near $p_j$. We have $E(Q) \subset r(p_i, p_j)$, but $p_j$ does not spatially dominates from far $p_i$.}
 \label{fig:NFOnlyE}
 \end{center}
@@ -416,7 +440,7 @@ However, previous Lemmas 1-4 do not hold for Multiplicative weighted Euclidean d
 
 \begin{figure}[!htp]
 \begin{center}
-\includegraphics[width=0.4\linewidth]{NFIntBisectorCH.eps}
+\includegraphics[width=0.4\linewidth]{img/NFIntBisectorCH.eps}
 \caption{a) The bisector of $p_i$ and $p_j$ intersects $CH(Q)$, but $p_i$ dominates from near $p_j$. b) Point $p_j$  is inside $CH(Q)$ but it is not a nearest skyline point because $p_i$ dominates it from near.
 %c) The Voronoi region of $p_j$ intersects with $CH(Q)$ but $p_j$ is not a nearest skyline point because $p_i$ dominates it from ner.
 }
@@ -426,7 +450,7 @@ However, previous Lemmas 1-4 do not hold for Multiplicative weighted Euclidean d
 
 \begin{figure}[!htp]
 \begin{center}
-\includegraphics[width=0.4\linewidth]{FFIntBisectorCH.eps}
+\includegraphics[width=0.4\linewidth]{img/FFIntBisectorCH.eps}
 \caption{a) The bisector of $p_i$ and $p_j$ intersects $CH(Q)$, but $p_j$ dominates from far $p_i$. b) Point $p_i$  is inside $CH(Q)$ but it is not a farthest skyline point because $p_j$ dominates it.
 %c) The Voronoi region of $p_j$ intersects with $CH(Q)$ and $p_j$ dominates from far $p_i$.
 }
