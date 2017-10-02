@@ -216,12 +216,12 @@ protected:
     sl::queries::WeightedQuery wq;
 };
 
-std::map<std::string, std::vector<size_t>> results_test;
+sl::queries::algorithms::DistanceType distance_type = sl::queries::algorithms::DistanceType::Neartest;
 
 BASELINE_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 1, 1) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, sl::queries::algorithms::DistanceType::Neartest);
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type);
 }
 
 BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 1, 1) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, sl::queries::algorithms::DistanceType::Neartest);
+    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type);
 }

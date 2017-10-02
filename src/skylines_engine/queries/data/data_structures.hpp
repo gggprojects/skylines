@@ -47,8 +47,8 @@ namespace sl { namespace queries { namespace data {
 
         WeightedPoint() {}
 
-        //WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), static_cast<int>(r.Next() * 10) % 10) {
-        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1) {
+        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), static_cast<int>(r.Next() * 10) % 10) {
+        //WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1) {
         }
 
         WeightedPoint(const Point &point, int weight) :
