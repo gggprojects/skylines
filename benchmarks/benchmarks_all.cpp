@@ -44,6 +44,7 @@ public:
 
 sl::queries::WeightedQuery wq;
 std::multimap<int64_t, Experiment> experiments;
+sl::queries::algorithms::DistanceType distance_type;
 
 void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_space) {
     wq.InitRandom(input_p_size, input_q_size);
@@ -169,13 +170,11 @@ void TransformCSV(const std::string &filename) {
 }
 
 int main(int argc, char** argv) {
-    GenerateFiles();
-    celero::Run(argc, argv);
-
     boost::program_options::options_description desc("Allowed options");
     desc.add_options()
         ("help", "produce help message")
-        ("t", boost::program_options::value<std::string>(), "Run and create CSV");
+        ("t", boost::program_options::value<std::string>(), "Run and create CSV")
+        ("d", boost::program_options::value<int>(), "Distance type. 0 Nearest, 1 furthest");
 
     boost::program_options::variables_map vm;
     try {
@@ -194,10 +193,32 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    std::string filename;
     if (vm.count("t")) {
-        std::string filename = vm["t"].as<std::string>();
+        filename = vm["t"].as<std::string>();
+    } else {
+        std::cout << desc << "\n";
+        return 1;
+    }
+
+    if (vm.count("d")) {
+        distance_type = vm["d"].as<int>() == 0 ? sl::queries::algorithms::DistanceType::Neartest : sl::queries::algorithms::DistanceType::Furthest;
+        if (distance_type == sl::queries::algorithms::DistanceType::Neartest) {
+            std::cout << "Executing nearest\n";
+        } else {
+            std::cout << "Executing furthest\n";
+        }
+    } else {
+        std::cout << desc << "\n";
+        return 1;
+    }
+
+    GenerateFiles();
+    celero::Run(argc, argv);
+    if (!filename.empty()) {
         TransformCSV(filename);
     }
+
 
     return 0;
 }
@@ -245,9 +266,6 @@ void AddOutputSize(size_t input_q_size, std::string experiment_name, size_t outp
         }
     }
 }
-
-
-sl::queries::algorithms::DistanceType distance_type = sl::queries::algorithms::DistanceType::Furthest;
 
 BASELINE_F(SkylineComputation, SingleThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
     wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type);
