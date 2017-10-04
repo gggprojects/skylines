@@ -1,0 +1,2 @@
+add_subdirectory(skylines_engine)
+add_subdirectory(skylines_ui)

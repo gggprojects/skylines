@@ -1,0 +1,4 @@
+[submodule "submodule/apis_vs2015"]
+	path = submodule/apis_vs2015
+	url = https://github.com/gggprojects/apis_vs2015.git
+	branch = master
