@@ -39,8 +39,7 @@ include_directories("submodule/apis_vs2015/rapidjson-master/include")
 include_directories("submodule/apis_vs2015/spdlog-master/include")
 
 #qt
-set(CMAKE_PREFIX_PATH "C:/git_src/skylines/submodule/apis_vs2015/Qt/msvc2015_64")
-#"D:/Qt/5.9.1/msvc2015_64"
+set(CMAKE_PREFIX_PATH "submodule/apis_vs2015/Qt/msvc2015_64")
 #"C:/git_src/skylines/submodule/apis_vs2015/Qt/msvc2015_64"
 set(CMAKE_INCLUDE_CURRENT_DIR ON) # Find includes in corresponding build directories
 find_package(Qt5Widgets)
