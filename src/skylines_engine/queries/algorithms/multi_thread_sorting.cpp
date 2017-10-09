@@ -1,9 +1,9 @@
 #include "queries/algorithms/multi_thread_sorting.hpp"
 
 namespace sl { namespace queries { namespace algorithms {
-    void MultiThreadSorting::Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
-        if (!Init(output)) return;
-        Compute(output, distance_type);
+    data::Statistics MultiThreadSorting::Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
+        if (!Init(output)) return data::Statistics();
+        return Compute(output, distance_type);
     }
 
     template<class Comparator>
@@ -11,14 +11,15 @@ namespace sl { namespace queries { namespace algorithms {
         const std::vector<data::WeightedPoint> &skyline_elements,
         std::vector<data::WeightedPoint> *skyline_candiates,
         const Data<data::Point> &input_q,
-        Comparator comparator_function) {
+        Comparator comparator_function,
+        data::Statistics *statistics) {
 
         std::vector<data::WeightedPoint>::const_reverse_iterator skyline_candidate = skyline_candiates->crbegin();
         while (skyline_candidate != skyline_candiates->crend()) {
             std::vector<data::WeightedPoint>::const_reverse_iterator skyline_element = skyline_elements.crbegin();
             bool is_skyline = true;
             while (is_skyline && skyline_element != skyline_elements.crend()) {
-                if (skyline_candidate->IsDominated(*skyline_element, input_q.GetPoints(), comparator_function)) {
+                if (skyline_candidate->IsDominated(*skyline_element, input_q.GetPoints(), comparator_function, statistics)) {
                     is_skyline = false;
                 }
                 skyline_element++;
@@ -32,7 +33,7 @@ namespace sl { namespace queries { namespace algorithms {
     }
 
     template<class Comparator, class Sorter>
-    void MultiThreadSorting::_Compute(
+    data::Statistics MultiThreadSorting::_Compute(
         Comparator comparator_function,
         Sorter sorter_function,
         NonConstData<data::WeightedPoint> *output) {
@@ -67,22 +68,31 @@ namespace sl { namespace queries { namespace algorithms {
 
         sorted_input.Clear(); //to release memory
 
+        data::Statistics statistics;
         for (unsigned int num_threads = concurent_threads_supported; num_threads > 0; num_threads--) {
 
             std::vector<std::thread> workers(num_threads);
+            std::vector<data::Statistics> partial_statistics(num_threads);
             for (unsigned int t = 0; t < num_threads; t++) {
-                const NonConstData<data::WeightedPoint> &skyline_elements = sorted_splitted[t];
-                NonConstData<data::WeightedPoint> &skyline_candidates = sorted_splitted[t + concurent_threads_supported - num_threads];
-                ComputeSingleThreadSorting(skyline_elements.GetPoints(), &skyline_candidates.Points(), input_q_, comparator_function);
+                data::Statistics *partial_statistic = &partial_statistics[t];
 
-                workers[t] = std::thread([this, &sorted_splitted, &concurent_threads_supported, t, num_threads, comparator_function] {
+                //const NonConstData<data::WeightedPoint> &skyline_elements = sorted_splitted[t];
+                //NonConstData<data::WeightedPoint> &skyline_candidates = sorted_splitted[t + concurent_threads_supported - num_threads];
+                //ComputeSingleThreadSorting(skyline_elements.GetPoints(), &skyline_candidates.Points(), input_q_, comparator_function, partial_statistic);
+
+                workers[t] = std::thread([this, &sorted_splitted, concurent_threads_supported, t, num_threads, comparator_function, partial_statistic] {
                     const NonConstData<data::WeightedPoint> &skyline_elements = sorted_splitted[t];
                     NonConstData<data::WeightedPoint> &skyline_candidates = sorted_splitted[t + concurent_threads_supported - num_threads];
-                    ComputeSingleThreadSorting(skyline_elements.GetPoints(), &skyline_candidates.Points(), input_q_, comparator_function);
+                    ComputeSingleThreadSorting(skyline_elements.GetPoints(), &skyline_candidates.Points(), input_q_, comparator_function, partial_statistic);
                 });
             }
             for (std::thread &t : workers) {
-                t.join();
+                if(t.joinable())
+                    t.join();
+            }
+            //accum the statistics
+            for (const data::Statistics & ds : partial_statistics) {
+                statistics += ds;
             }
         }
 
@@ -90,19 +100,22 @@ namespace sl { namespace queries { namespace algorithms {
         for (const NonConstData<data::WeightedPoint> &o : sorted_splitted) {
             output->Points().insert(output->Points().begin(), o.GetPoints().cbegin(), o.GetPoints().cend());
         }
+
+        statistics.output_size_ = output->Points().size();
+        return statistics;
     }
 
-    void MultiThreadSorting::Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
+    data::Statistics MultiThreadSorting::Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
         const data::Point &first_q = input_q_.GetPoints()[0];
         switch (distance_type) {
             case sl::queries::algorithms::DistanceType::Neartest:
-                _Compute(
+                return _Compute(
                     [](const float a, const float b) -> bool { return a <= b; },
                     [&first_q](const data::WeightedPoint &a, const data::WeightedPoint &b) -> bool { return a.SquaredDistance(first_q) < b.SquaredDistance(first_q); },
                     output);
                 break;
             case sl::queries::algorithms::DistanceType::Furthest:
-                _Compute(
+                return _Compute(
                     [](const float a, const float b) -> bool { return a >= b; },
                     [&first_q](const data::WeightedPoint &a, const data::WeightedPoint &b) -> bool { return a.SquaredDistance(first_q) > b.SquaredDistance(first_q); },
                     output);
@@ -110,6 +123,7 @@ namespace sl { namespace queries { namespace algorithms {
             default:
                 break;
         }
+        return data::Statistics();
     }
 }}}
 

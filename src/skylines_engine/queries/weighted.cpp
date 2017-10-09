@@ -61,8 +61,8 @@ namespace sl { namespace queries {
         glEnd();
     }
 
-    void WeightedQuery::RunAlgorithm(AlgorithmType type, algorithms::DistanceType distance_type) {
-        algorithms_[type]->Run(&output_, distance_type);
+    data::Statistics WeightedQuery::RunAlgorithm(AlgorithmType type, algorithms::DistanceType distance_type) {
+        return algorithms_[type]->Run(&output_, distance_type);
     }
 
 }}

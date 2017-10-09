@@ -17,14 +17,15 @@ namespace sl { namespace queries { namespace algorithms {
             std::vector<data::WeightedPoint>::const_iterator first_skyline_candidate,
             std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate,
             NonConstData<data::WeightedPoint> *output,
-            Comparator comparator_function);
+            Comparator comparator_function,
+            data::Statistics *statistics);
 
 
-        void Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) final;
-        void Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type);
+        data::Statistics Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) final;
+        data::Statistics Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type);
 
         template<class Comparator>
-        void _Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output);
+        data::Statistics _Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output);
     };
 }}}
 

@@ -29,7 +29,7 @@ namespace sl { namespace queries {
 
         WeightedQuery();
 
-        void RunAlgorithm(AlgorithmType type, algorithms::DistanceType distance_type);
+        data::Statistics RunAlgorithm(AlgorithmType type, algorithms::DistanceType distance_type);
 
         void InitRandom(size_t num_points_p, size_t num_points_q);
         void Render() const final;
