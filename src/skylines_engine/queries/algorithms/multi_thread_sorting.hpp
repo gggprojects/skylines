@@ -12,11 +12,11 @@ namespace sl { namespace queries { namespace algorithms {
         }
 
     protected:
-        void Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) final;
-        void Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type);
+        data::Statistics Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) final;
+        data::Statistics Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type);
 
         template<class Comparator, class Sorter>
-        void _Compute(
+        data::Statistics _Compute(
             Comparator comparator_function,
             Sorter sorter_function,
             NonConstData<data::WeightedPoint> *output);

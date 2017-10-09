@@ -33,6 +33,7 @@ __device__ void _ComputePartialSkyline(
     size_t input_p_size,
     int input_q_size,
     Comparator comparator_function,
+    sl::queries::data::Statistics *statistics,
     unsigned int *result) {
 
     __shared__ sl::queries::data::WeightedPoint shared_input_p[SHARED_MEM_ELEMENTS];
@@ -52,7 +53,7 @@ __device__ void _ComputePartialSkyline(
             #pragma unroll SHARED_MEM_ELEMENTS
             for (int i = 0; i < SHARED_MEM_ELEMENTS; i++) {
                 if (current_input_p_pos + i != global_pos &&current_input_p_pos + i < input_p_size) { // do not check against the same point
-                    if (IsDominated_impl(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, comparator_function)) {
+                    if (IsDominated_impl(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, comparator_function, statistics)) {
                         is_skyline = false;
                         break;
                     }
@@ -70,14 +71,15 @@ __global__ void ComputePartialSkyline(
     size_t input_p_size,
     int input_q_size,
     sl::queries::algorithms::DistanceType distance_type,
+    sl::queries::data::Statistics *statistics,
     unsigned int *result) {
 
     switch (distance_type) {
         case sl::queries::algorithms::DistanceType::Neartest:
-            _ComputePartialSkyline(input_p, input_p_size, input_q_size, NeartestFunc, result);
+            _ComputePartialSkyline(input_p, input_p_size, input_q_size, NeartestFunc, statistics, result);
             break;
         case sl::queries::algorithms::DistanceType::Furthest:
-            _ComputePartialSkyline(input_p, input_p_size, input_q_size, FurthestFunc, result);
+            _ComputePartialSkyline(input_p, input_p_size, input_q_size, FurthestFunc, statistics, result);
             break;
         default:
             break;
@@ -112,7 +114,8 @@ extern "C" void ComputeGPUSkyline(
     const std::vector<sl::queries::data::WeightedPoint> &input_p,
     const std::vector<sl::queries::data::Point> &input_q,
     std::vector<sl::queries::data::WeightedPoint> *output,
-    sl::queries::algorithms::DistanceType distance_type) {
+    sl::queries::algorithms::DistanceType distance_type,
+    sl::queries::data::Statistics *statistics) {
 
     sl::gpu::GPUStream gpu_stream;
 
@@ -128,6 +131,10 @@ extern "C" void ComputeGPUSkyline(
     sl::gpu::GPUMemory<sl::queries::data::WeightedPoint> input_p_d(input_p_size_SHARED_MEM_SIZE_multiple);
     input_p_d.UploadToDeviceAsync(input_p, gpu_stream); //the final values maybe empty
 
+    //copy statistics
+    sl::gpu::GPUMemory<sl::queries::data::Statistics> statistics_d(1);
+    statistics_d.UploadToDeviceAsync(statistics, 1, gpu_stream);
+
     sl::gpu::GPUMemory<unsigned int> result_d(input_p_size_SHARED_MEM_SIZE_multiple);
     /*
     MAX number of threads per MS is 2048.
@@ -137,10 +144,12 @@ extern "C" void ComputeGPUSkyline(
     int total_numBlocks = static_cast<int>(divUp(input_p_size, static_cast<size_t>(threadsPerBlock.x * threadsPerBlock.y)));
     dim3 grid(total_numBlocks, 1);
 
-    ComputePartialSkyline <<< grid, threadsPerBlock, 0, gpu_stream() >>> (input_p_d(), input_p_size, input_q_size, distance_type, result_d());
+    ComputePartialSkyline <<< grid, threadsPerBlock, 0, gpu_stream() >>> (input_p_d(), input_p_size, input_q_size, distance_type, statistics_d(), result_d());
 
     std::vector<unsigned int> result(input_p_size);
     result_d.DownloadToHostAsync(result.data(), input_p_size, gpu_stream);
+    statistics_d.DownloadToHostAsync(statistics, 1, gpu_stream);
+
     gpu_stream.Syncronize();
 
     for (size_t i = 0; i < result.size(); i++) {

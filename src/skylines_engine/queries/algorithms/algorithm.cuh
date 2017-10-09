@@ -5,14 +5,14 @@
 #include <cuda_runtime.h>
 #include "queries/data/data_structures.hpp"
 
-
 template<class Comparator>
 __host__ __device__ static inline bool IsDominated_impl(
     const sl::queries::data::WeightedPoint &a,
     const sl::queries::data::WeightedPoint &b,
     const sl::queries::data::Point *input_q,
     const int q_size,
-    Comparator comparator_function) {
+    Comparator comparator_function,
+    sl::queries::data::Statistics *statistics) {
     for (int i = 0; i < q_size; i++) {
         float a_distance = a.SquaredDistance(input_q[i]);
         float b_distance = b.SquaredDistance(input_q[i]);
@@ -29,7 +29,8 @@ __host__ __device__ static inline int Dominator_impl(
     const sl::queries::data::WeightedPoint &b,
     const sl::queries::data::Point *input_q,
     const int q_size, 
-    Comparator comparator_function) {
+    Comparator comparator_function,
+    sl::queries::data::Statistics *statistics) {
     bool a_is_dominated_by_b = true;
     bool b_is_dominated_by_a = true;
     for (int i = 0; i < q_size; i++) {
