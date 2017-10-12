@@ -17,12 +17,21 @@ namespace sl { namespace queries {
     public:
         Data() {}
 
-        Data(std::vector<T> &&points) {
-            points_ = std::move(points);
+        Data(const Data &other) {
+            *this = other;
         }
 
-        Data& operator=(Data &&points) {
-            points_ = std::move(points.points_);
+        Data(Data &&other) {
+            *this = other;
+        }
+
+        Data& operator=(const Data &other) {
+            points_ = other.points_;
+            return *this;
+        }
+
+        Data& operator=(Data &&other) {
+            points_ = std::move(other.points_);
             return *this;
         }
 
@@ -61,17 +70,14 @@ namespace sl { namespace queries {
         }
         NonConstData() {}
 
-        NonConstData(NonConstData<T> &&other) {
-            points_ = other.points_;
+        NonConstData(const Data<T> &other) : Data<T>(other) {
+        }
+
+        void Move(NonConstData<T> &&other)  {
+            points_ = std::move(other.points_);
         }
 
         std::vector<T> & Points() { return points_; }
-
-        NonConstData& operator=(const Data &other) {
-            points_.clear();
-            points_.assign(other.GetPoints().cbegin(), other.GetPoints().cend());
-            return *this;
-        }
     };
 }}
 #endif // !SLYLINES_QUERIES_INPUT_DATA_HPP

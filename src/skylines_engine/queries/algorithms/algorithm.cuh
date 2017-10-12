@@ -16,6 +16,7 @@ __host__ __device__ static inline bool IsDominated_impl(
     for (int i = 0; i < q_size; i++) {
         float a_distance = a.SquaredDistance(input_q[i]);
         float b_distance = b.SquaredDistance(input_q[i]);
+        statistics->num_comparisions_++;
         if (comparator_function(a_distance, b_distance)) {
             return false;
         }
@@ -36,10 +37,12 @@ __host__ __device__ static inline int Dominator_impl(
     for (int i = 0; i < q_size; i++) {
         float a_distance = a.SquaredDistance(input_q[i]);
         float b_distance = b.SquaredDistance(input_q[i]);
+        statistics->num_comparisions_++;
         if (comparator_function(a_distance, b_distance)) {
             a_is_dominated_by_b = false;
             if (!b_is_dominated_by_a) return -1;
         }
+        statistics->num_comparisions_++;
         if (comparator_function(b_distance, a_distance)) {
             b_is_dominated_by_a = false;
             if (!a_is_dominated_by_b) return -1;

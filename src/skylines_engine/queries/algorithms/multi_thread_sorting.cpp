@@ -1,4 +1,5 @@
 #include "queries/algorithms/multi_thread_sorting.hpp"
+#include <iostream>
 
 namespace sl { namespace queries { namespace algorithms {
     data::Statistics MultiThreadSorting::Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
@@ -38,11 +39,9 @@ namespace sl { namespace queries { namespace algorithms {
         Sorter sorter_function,
         NonConstData<data::WeightedPoint> *output) {
         //copy P
-        NonConstData<data::WeightedPoint> sorted_input;
-        sorted_input = input_p_;
+        NonConstData<data::WeightedPoint> sorted_input(input_p_);
 
         // sort by the first point in Q
-        const data::Point &first_q = input_q_.GetPoints()[0];
         std::sort(sorted_input.Points().begin(), sorted_input.Points().end(), sorter_function);
 
         unsigned int concurent_threads_supported = std::thread::hardware_concurrency();
@@ -69,26 +68,33 @@ namespace sl { namespace queries { namespace algorithms {
         sorted_input.Clear(); //to release memory
 
         data::Statistics statistics;
+        std::vector<NonConstData<data::WeightedPoint>> sorted_splitted_output(concurent_threads_supported);
         for (unsigned int num_threads = concurent_threads_supported; num_threads > 0; num_threads--) {
 
             std::vector<std::thread> workers(num_threads);
             std::vector<data::Statistics> partial_statistics(num_threads);
+
             for (unsigned int t = 0; t < num_threads; t++) {
                 data::Statistics *partial_statistic = &partial_statistics[t];
 
-                //const NonConstData<data::WeightedPoint> &skyline_elements = sorted_splitted[t];
-                //NonConstData<data::WeightedPoint> &skyline_candidates = sorted_splitted[t + concurent_threads_supported - num_threads];
-                //ComputeSingleThreadSorting(skyline_elements.GetPoints(), &skyline_candidates.Points(), input_q_, comparator_function, partial_statistic);
+                workers[t] = std::thread([this, &sorted_splitted, &sorted_splitted_output, concurent_threads_supported, t, num_threads, comparator_function, partial_statistic] {
+                    size_t sorted_skyline_elemenents_index = t;
+                    size_t sorted_skyline_candidates_index = t + concurent_threads_supported - num_threads;
 
-                workers[t] = std::thread([this, &sorted_splitted, concurent_threads_supported, t, num_threads, comparator_function, partial_statistic] {
-                    const NonConstData<data::WeightedPoint> &skyline_elements = sorted_splitted[t];
-                    NonConstData<data::WeightedPoint> &skyline_candidates = sorted_splitted[t + concurent_threads_supported - num_threads];
+                    sorted_splitted_output[sorted_skyline_candidates_index].Points().assign(sorted_splitted[sorted_skyline_candidates_index].GetPoints().begin(), sorted_splitted[sorted_skyline_candidates_index].GetPoints().end());
+
+                    const NonConstData<data::WeightedPoint> &skyline_elements = sorted_splitted[sorted_skyline_elemenents_index];
+                    NonConstData<data::WeightedPoint> &skyline_candidates = sorted_splitted_output[sorted_skyline_candidates_index];
                     ComputeSingleThreadSorting(skyline_elements.GetPoints(), &skyline_candidates.Points(), input_q_, comparator_function, partial_statistic);
                 });
             }
             for (std::thread &t : workers) {
                 if(t.joinable())
                     t.join();
+            }
+            //reassign the results
+            for (int t = concurent_threads_supported - num_threads; t < concurent_threads_supported; t++) {
+                sorted_splitted[t].Move(std::move(sorted_splitted_output[t]));
             }
             //accum the statistics
             for (const data::Statistics & ds : partial_statistics) {

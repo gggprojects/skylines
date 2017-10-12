@@ -72,6 +72,7 @@ namespace sl { namespace ui { namespace main_window {
     }
 
     void MainWindow::RunMultiThreadSorting() {
+        //weighted_query_ptr_->FromFile("input_crash.json");
         weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type_);
         ogl_->update();
     }

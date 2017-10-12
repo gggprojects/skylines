@@ -8,6 +8,7 @@
 #include <celero/Celero.h>
 #include <csv.h>
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #pragma warning(pop)
 
 #include "queries/weighted.hpp"
@@ -53,7 +54,7 @@ void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_spa
     experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForceDiscarting")));
     experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadSorting")));
     experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForce")));
-    //experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadSorting")));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadSorting")));
     experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "GPUBruteForce")));
 
     std::string filename = experiments.equal_range(problem_space).first->second.GetFileName();
@@ -139,7 +140,7 @@ void PreProcessFile(const std::string &filename) {
     t2.close();
 }
 
-void TransformCSV(const std::string &filename) {
+void TransformCSV(const std::string &filename, const std::string &destination_filename) {
 
     PreProcessFile(filename);
 
@@ -164,18 +165,21 @@ void TransformCSV(const std::string &filename) {
         it->second.z_score_ = z_score;
     }
 
-    WriteFile(filename + ".transformed-improvement.csv", [](const Experiment &e) -> double { return e.baseline_; });
-    WriteFile(filename + ".transformed-running-time-min.csv", [](const Experiment &e) -> double { return e.min_usec_ / 1000000.0; });
-    WriteFile(filename + ".transformed-variance.csv", [](const Experiment &e) -> double { return e.variance_; });
-    WriteFile(filename + ".transformed-ouput_size.csv", [](const Experiment &e) -> size_t { return e.statistics_[0].output_size_; });
+    WriteFile(destination_filename + "-improvement.csv", [](const Experiment &e) -> double { return e.baseline_; });
+    WriteFile(destination_filename + "-running-time-min.csv", [](const Experiment &e) -> double { return e.min_usec_ / 1000000.0; });
+    WriteFile(destination_filename + "-variance.csv", [](const Experiment &e) -> double { return e.variance_; });
+    WriteFile(destination_filename + "-ouput_size.csv", [](const Experiment &e) -> size_t { return e.statistics_[0].output_size_; });
+    WriteFile(destination_filename + "-num_comparisons.csv", [](const Experiment &e) -> size_t { return e.statistics_[0].num_comparisions_; });
+
+    boost::filesystem::path p(filename);
+    boost::filesystem::remove(p);
 }
 
 int main(int argc, char** argv) {
     boost::program_options::options_description desc("Allowed options");
     desc.add_options()
         ("help", "produce help message")
-        ("t", boost::program_options::value<std::string>(), "Run and create CSV")
-        ("d", boost::program_options::value<int>(), "Distance type. 0 Nearest, 1 furthest");
+        ("t", boost::program_options::value<std::string>(), "Run and create CSV");
 
     boost::program_options::variables_map vm;
     try {
@@ -202,24 +206,18 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    if (vm.count("d")) {
-        distance_type = vm["d"].as<int>() == 0 ? sl::queries::algorithms::DistanceType::Neartest : sl::queries::algorithms::DistanceType::Furthest;
-        if (distance_type == sl::queries::algorithms::DistanceType::Neartest) {
-            std::cout << "Executing nearest\n";
-        } else {
-            std::cout << "Executing furthest\n";
-        }
-    } else {
-        std::cout << desc << "\n";
-        return 1;
-    }
-
     GenerateFiles();
-    celero::Run(argc, argv);
-    if (!filename.empty()) {
-        TransformCSV(filename);
-    }
 
+    std::cout << "Executing nearest\n";
+    distance_type = sl::queries::algorithms::DistanceType::Neartest;
+    celero::Run(argc, argv);
+
+    TransformCSV(filename, filename + "-nearest");
+
+    std::cout << "Executing furthest\n";
+    distance_type = sl::queries::algorithms::DistanceType::Furthest;
+    celero::Run(argc, argv);
+    TransformCSV(filename, filename + "-furthest");
 
     return 0;
 }
@@ -289,10 +287,10 @@ BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture
     AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForce", statistics);
 }
 
-//BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
-//    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type);
-//    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadSorting", statistics);
-//}
+BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
+    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadSorting", statistics);
+}
 
 BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type);
