@@ -44,6 +44,7 @@ __device__ void _ComputePartialSkyline(
     sl::queries::data::WeightedPoint skyline_candidate(input_p[global_pos]);
     bool is_skyline = global_pos < input_p_size;
 
+    sl::queries::data::Statistics thread_statistics;
     for (size_t current_input_p_pos = 0; current_input_p_pos < input_p_size; current_input_p_pos += SHARED_MEM_ELEMENTS) {
         //all threads in the block loads to shared
         shared_input_p[threadIdx.x] = input_p[threadIdx.x + current_input_p_pos];
@@ -53,7 +54,7 @@ __device__ void _ComputePartialSkyline(
             #pragma unroll SHARED_MEM_ELEMENTS
             for (int i = 0; i < SHARED_MEM_ELEMENTS; i++) {
                 if (current_input_p_pos + i != global_pos &&current_input_p_pos + i < input_p_size) { // do not check against the same point
-                    if (IsDominated_impl(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, comparator_function, statistics)) {
+                    if (IsDominated_impl(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, comparator_function, &thread_statistics)) {
                         is_skyline = false;
                         break;
                     }
@@ -64,6 +65,8 @@ __device__ void _ComputePartialSkyline(
     }
 
     result[global_pos] = is_skyline ? 1 : 0;
+
+    atomicAdd(&statistics->num_comparisions_, thread_statistics.num_comparisions_);
 }
 
 __global__ void ComputePartialSkyline(

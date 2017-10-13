@@ -10,7 +10,7 @@ namespace sl { namespace queries { namespace data {
 
     struct __align__(16) Statistics {
 
-        Statistics() : num_comparisions_(0), output_size_(0) {
+        __host__ __device__ Statistics() : num_comparisions_(0), output_size_(0) {
         }
 
         Statistics operator+=(const Statistics &other) {
@@ -81,6 +81,7 @@ namespace sl { namespace queries { namespace data {
             for (const Point p_q : q) {
                 float distance = Distance(p_q);
                 float other_distance = other.Distance(p_q);
+                statistics->num_comparisions_++;
                 if (comparator(distance, other_distance)) {
                     return false;
                 }

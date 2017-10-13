@@ -16,13 +16,14 @@
 
 struct Experiment {
 public:
-    Experiment(size_t input_p_size, size_t input_q_size, std::string experiment_name) :
-        input_p_size_(input_p_size), input_q_size_(input_q_size), experiment_name_(experiment_name) {
+    Experiment(size_t input_p_size, size_t input_q_size, std::string experiment_name, sl::queries::algorithms::DistanceType distance_type) :
+        input_p_size_(input_p_size), input_q_size_(input_q_size), experiment_name_(experiment_name), distance_type_(distance_type) {
     }
 
     size_t input_p_size_;
     size_t input_q_size_;
     std::string experiment_name_;
+    sl::queries::algorithms::DistanceType distance_type_;
     double baseline_;
     double max_usec_;
     double min_usec_;
@@ -47,36 +48,37 @@ sl::queries::WeightedQuery wq;
 std::multimap<int64_t, Experiment> experiments;
 sl::queries::algorithms::DistanceType distance_type;
 
-void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_space) {
-    wq.InitRandom(input_p_size, input_q_size);
+void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_space, bool create_files) {
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForce", distance_type)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForceDiscarting", distance_type)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadSorting", distance_type)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForce", distance_type)));
+    //experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadSorting", distance_type)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "GPUBruteForce", distance_type)));
 
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForce")));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForceDiscarting")));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadSorting")));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForce")));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadSorting")));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "GPUBruteForce")));
-
-    std::string filename = experiments.equal_range(problem_space).first->second.GetFileName();
-    wq.ToFile(filename);
+    if (create_files) {
+        wq.InitRandom(input_p_size, input_q_size);
+        std::string filename = experiments.equal_range(problem_space).first->second.GetFileName();
+        wq.ToFile(filename);
+    }
 }
 
-void GenerateFiles() {
-    //GenerateFile(2000, 100, 0);
-    //GenerateFile(5000, 100, 1);
-    //GenerateFile(10000, 100, 2);
-    //GenerateFile(20000, 100, 3);
-    //GenerateFile(50000, 100, 4);
-    //GenerateFile(75000, 100, 5);
-    //GenerateFile(100000, 100, 6);
+void GenerateFiles(bool create_files) {
+    GenerateFile(2000, 100, 0, create_files);
+    GenerateFile(5000, 100, 1, create_files);
+    GenerateFile(10000, 100, 2, create_files);
+    GenerateFile(20000, 100, 3, create_files);
+    GenerateFile(50000, 100, 4, create_files);
+    GenerateFile(75000, 100, 5, create_files);
+    GenerateFile(100000, 100, 6, create_files);
 
-    GenerateFile(100, 10, 0);
-    GenerateFile(200, 10, 1);
-    GenerateFile(300, 10, 2);
-    GenerateFile(400, 10, 3);
-    GenerateFile(500, 10, 4);
-    GenerateFile(600, 10, 5);
-    GenerateFile(700, 10, 6);
+    //GenerateFile(10, 10, 0, create_files);
+    //GenerateFile(20, 10, 1, create_files);
+    //GenerateFile(30, 10, 2, create_files);
+    //GenerateFile(40, 10, 3, create_files);
+    //GenerateFile(50, 10, 4, create_files);
+    //GenerateFile(70, 10, 5, create_files);
+    //GenerateFile(80, 10, 6, create_files);
 }
 
 std::string GetHeader() {
@@ -179,7 +181,8 @@ int main(int argc, char** argv) {
     boost::program_options::options_description desc("Allowed options");
     desc.add_options()
         ("help", "produce help message")
-        ("t", boost::program_options::value<std::string>(), "Run and create CSV");
+        ("t", boost::program_options::value<std::string>(), "Run and create CSV")
+        ("d", boost::program_options::value<int>(), "Distance type. 1 nearest, 0 furthest");
 
     boost::program_options::variables_map vm;
     try {
@@ -206,18 +209,21 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    GenerateFiles();
+    if (vm.count("d")) {
+        distance_type = (vm["d"].as<int>() == 1 ? sl::queries::algorithms::DistanceType::Neartest : sl::queries::algorithms::DistanceType::Furthest);
+    } else {
+        std::cout << desc << "\n";
+        return 1;
+    }
 
-    std::cout << "Executing nearest\n";
-    distance_type = sl::queries::algorithms::DistanceType::Neartest;
-    celero::Run(argc, argv);
+    GenerateFiles(distance_type == sl::queries::algorithms::DistanceType::Neartest);
 
-    TransformCSV(filename, filename + "-nearest");
-
-    std::cout << "Executing furthest\n";
-    distance_type = sl::queries::algorithms::DistanceType::Furthest;
-    celero::Run(argc, argv);
-    TransformCSV(filename, filename + "-furthest");
+    char **argv_copy = new char*[3];
+    argv_copy[0] = argv[0];
+    argv_copy[1] = argv[1];
+    argv_copy[2] = argv[2];
+    celero::Run(3, argv_copy);
+    TransformCSV(filename, filename + (distance_type == sl::queries::algorithms::DistanceType::Neartest ? "-nearest" : "-furthest"));
 
     return 0;
 }
@@ -232,8 +238,8 @@ public:
         std::vector<std::pair<int64_t, uint64_t>> problemSpace;
 
         int64_t value = 0;
-        //std::vector<int> iterations{ 100, 80, 50, 30, 10, 5, 1 };
-        std::vector<int> iterations{ 1, 1, 1, 1, 1, 1, 1 };
+        std::vector<int> iterations{ 100, 80, 10, 5, 3, 2, 1 };
+        //std::vector<int> iterations{ 1, 1, 1, 1, 1, 1, 1 };
         using map_it = std::multimap<int64_t, Experiment>::iterator;
         std::pair<map_it, map_it> iterators = experiments.equal_range(value);
         do {
@@ -258,9 +264,9 @@ protected:
     sl::queries::WeightedQuery wq;
 };
 
-void AddStatistics(size_t input_q_size, std::string experiment_name, const sl::queries::data::Statistics &statistics) {
+void AddStatistics(size_t input_q_size, std::string experiment_name, const sl::queries::data::Statistics &statistics, sl::queries::algorithms::DistanceType distance_type) {
     for (std::multimap<int64_t, Experiment>::iterator it = experiments.begin(); it != experiments.end(); it++) {
-        if (it->second.input_p_size_ == input_q_size && it->second.experiment_name_ == experiment_name) {
+        if (it->second.input_p_size_ == input_q_size && it->second.experiment_name_ == experiment_name && it->second.distance_type_ == distance_type) {
             it->second.statistics_.push_back(statistics);
             return;
         }
@@ -269,30 +275,30 @@ void AddStatistics(size_t input_q_size, std::string experiment_name, const sl::q
 
 BASELINE_F(SkylineComputation, SingleThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForce", statistics);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForce", statistics, distance_type);
 }
 
 BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarting, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForceDiscarting", statistics);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForceDiscarting", statistics, distance_type);
 }
 
 BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadSorting", statistics);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadSorting", statistics, distance_type);
 }
 
 BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForce", statistics);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForce", statistics, distance_type);
 }
 
-BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
-    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadSorting", statistics);
-}
+//BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
+//    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type);
+//    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadSorting", statistics, distance_type);
+//}
 
 BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "GPUBruteForce", statistics);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "GPUBruteForce", statistics, distance_type);
 }
