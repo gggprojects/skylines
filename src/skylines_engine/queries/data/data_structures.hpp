@@ -5,23 +5,9 @@
 
 #include "common/irenderable.hpp"
 #include "queries/data/random_generator.hpp"
+#include "queries/data/stadistics.hpp"
 
 namespace sl { namespace queries { namespace data {
-
-    struct __align__(16) Statistics {
-
-        __host__ __device__ Statistics() : num_comparisions_(0), output_size_(0) {
-        }
-
-        Statistics operator+=(const Statistics &other) {
-            num_comparisions_ += other.num_comparisions_;
-            output_size_ += other.output_size_;
-            return *this;
-        }
-
-        size_t num_comparisions_;
-        size_t output_size_;
-    };
 
     struct __align__(8) Point {
 
@@ -79,10 +65,10 @@ namespace sl { namespace queries { namespace data {
         template<class Comparator>
         bool IsDominated(const WeightedPoint &other, const std::vector<Point> &q, Comparator comparator, Statistics *statistics) const {
             for (const Point p_q : q) {
-                float distance = Distance(p_q);
-                float other_distance = other.Distance(p_q);
-                statistics->num_comparisions_++;
-                if (comparator(distance, other_distance)) {
+                float a_distance = Distance(p_q);
+                float b_distance = other.Distance(p_q);
+                ComputeStatistics(a_distance, b_distance, statistics);
+                if (comparator(a_distance, b_distance)) {
                     return false;
                 }
             }
