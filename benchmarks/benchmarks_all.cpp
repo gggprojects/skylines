@@ -57,7 +57,12 @@ void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_spa
     experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "GPUBruteForce", distance_type)));
 
     if (create_files) {
-        wq.InitRandom(input_p_size, input_q_size);
+        sl::queries::data::UniformRealRandomGenerator rrg_x(0., 1.);
+        sl::queries::data::UniformRealRandomGenerator rrg_y(0., 1.);
+        sl::queries::data::UniformIntRandomGenerator irg(1, 10);
+
+        wq.InitRandom(input_p_size, input_q_size, rrg_x, rrg_y, irg);
+
         std::string filename = experiments.equal_range(problem_space).first->second.GetFileName();
         wq.ToFile(filename);
     }

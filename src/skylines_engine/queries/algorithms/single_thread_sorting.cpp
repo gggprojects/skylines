@@ -27,9 +27,9 @@ namespace sl { namespace queries { namespace algorithms {
 
         data::Statistics statistics;
         for (std::vector<data::WeightedPoint>::const_iterator skyline_candidate = first_block_element + 1; skyline_candidate != last_block_element; ++skyline_candidate) {
-            std::vector<data::WeightedPoint>::const_reverse_iterator skyline_element = output->GetPoints().crbegin();
+            std::vector<data::WeightedPoint>::const_iterator skyline_element = output->GetPoints().cbegin();
             bool is_skyline = true;
-            while (is_skyline && skyline_element != output->Points().rend()) {
+            while (is_skyline && skyline_element != output->Points().end()) {
                 if (skyline_candidate->IsDominated(*skyline_element, input_q_.GetPoints(), comparator_function, &statistics)) {
                     is_skyline = false;
                 }

@@ -13,9 +13,17 @@ namespace sl { namespace queries {
     class skylines_engine_DLL_EXPORTS DataCapable {
     public:
         void Clear() {
+            ClearP();
+            ClearQ();
+            ClearOutput();
+        }
+
+        void ClearP() {
             input_p_.Clear();
+        }
+
+        void ClearQ() {
             input_q_.Clear();
-            output_.Clear();
         }
 
         void ClearOutput() {

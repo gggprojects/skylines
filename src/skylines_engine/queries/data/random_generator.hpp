@@ -19,11 +19,20 @@ namespace sl { namespace queries { namespace data {
     class UniformIntRandomGenerator : public UniformRandomGenerator<int> {
     public:
         UniformIntRandomGenerator() :
-            UniformRandomGenerator(std::random_device()()) {
+            UniformIntRandomGenerator(std::random_device()()) {
         }
 
         UniformIntRandomGenerator(unsigned int seed) :
+            UniformIntRandomGenerator(seed, 1, 1) {
+        }
+
+        UniformIntRandomGenerator(int min, int max) :
+            UniformIntRandomGenerator(std::random_device()(), min, max) {
+        }
+
+        UniformIntRandomGenerator(unsigned int seed, int min, int max) :
             UniformRandomGenerator(seed) {
+            dis.param(std::uniform_int_distribution<int>::param_type(min, max));
         }
 
         void SetRange(int min, int max) {
@@ -44,8 +53,16 @@ namespace sl { namespace queries { namespace data {
         }
 
         UniformRealRandomGenerator(unsigned int seed) :
+            UniformRealRandomGenerator(seed, 0., 1.) {
+        }
+
+        UniformRealRandomGenerator(double min, double max) :
+            UniformRealRandomGenerator(std::random_device()(), min, max) {
+        }
+
+        UniformRealRandomGenerator(unsigned int seed, double min, double max) :
             UniformRandomGenerator(seed),
-            dis(0, 1) {
+            dis(min, max) {
         }
 
         double Next() final {

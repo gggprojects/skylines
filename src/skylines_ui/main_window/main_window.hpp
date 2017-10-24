@@ -25,6 +25,8 @@ namespace sl { namespace ui { namespace main_window {
         void UpdateRender();
         void Render();
     private:
+        void InitRandomP();
+        void InitRandomQ();
         void InitRandom();
         void SaveImage();
 

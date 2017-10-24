@@ -20,6 +20,8 @@ public:
     }
 };
 
+using namespace sl::queries;
+
 class InputInitializer : public ::testing::TestWithParam<InputParameters> {
 public:
     InputInitializer() {
@@ -27,7 +29,13 @@ public:
 
     virtual void SetUp() {
         input_parameters_ = GetParam();
-        wq.InitRandom(input_parameters_.num_points_p_, input_parameters_.num_points_q_);
+
+        data::UniformRealRandomGenerator rrg_x(0., 1.);
+        data::UniformRealRandomGenerator rrg_y(0., 1.);
+        data::UniformIntRandomGenerator irg(1, 10);
+
+        wq.InitRandom(input_parameters_.num_points_p_, input_parameters_.num_points_q_,
+            rrg_x, rrg_y, irg);
         wq.ToFile("test.json");
     }
 
