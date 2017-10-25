@@ -31,7 +31,19 @@ namespace sl { namespace queries {
 
         data::Statistics RunAlgorithm(AlgorithmType type, algorithms::DistanceType distance_type);
 
-        void InitRandom(size_t num_points_p, size_t num_points_q);
+        void InitRandomP(size_t num_points_p,
+            data::UniformRealRandomGenerator &rrg_x,
+            data::UniformRealRandomGenerator &rrg_y,
+            data::UniformIntRandomGenerator &irg);
+
+        void InitRandomQ(size_t num_points_q,
+            data::UniformRealRandomGenerator &rrg_x,
+            data::UniformRealRandomGenerator &rrg_y);
+
+        void InitRandom(size_t num_points_p, size_t num_points_q,
+            data::UniformRealRandomGenerator &rrg_x,
+            data::UniformRealRandomGenerator &rrg_y,
+            data::UniformIntRandomGenerator &irg);
         void Render() const final;
 
     private:

@@ -35,6 +35,10 @@ namespace sl { namespace ui { namespace main_window {
 
         connect(ui_->actionSave_image_to_file, &QAction::triggered, this, &MainWindow::SaveImage);
         connect(ui_->initRandom_PB, &QPushButton::clicked, this, &MainWindow::InitRandom);
+
+        connect(ui_->initRandomP_PB, &QPushButton::clicked, this, &MainWindow::InitRandomP);
+        connect(ui_->initRandomQ_PB, &QPushButton::clicked, this, &MainWindow::InitRandomQ);
+
         connect(ui_->serialize_input_points_PB, &QPushButton::clicked, this, &MainWindow::SerializeInputPoints);
         connect(ui_->load_input_points_PB, &QPushButton::clicked, this, &MainWindow::LoadInputPoints);
         connect(ui_->clear_PB2, &QPushButton::clicked, this, &MainWindow::Clear);
@@ -82,10 +86,48 @@ namespace sl { namespace ui { namespace main_window {
         ogl_->update();
     }
 
-    void MainWindow::InitRandom() {
-        weighted_query_ptr_->Clear();
-        weighted_query_ptr_->InitRandom(static_cast<size_t>(ui_->spinBox_P->value()), static_cast<size_t>(ui_->spinBox_Q->value()));
+    void MainWindow::InitRandomP() {
+        weighted_query_ptr_->ClearP();
+
+        double min_x = ui_->doubleSpinBox_MinX->value();
+        double min_y = ui_->doubleSpinBox_MinY->value();
+        double max_x = ui_->doubleSpinBox_MaxX->value();
+        double max_y = ui_->doubleSpinBox_MaxY->value();
+
+        int min_weight = ui_->spinBox_MinW->value();
+        int max_weight = ui_->spinBox_MaxW->value();
+
+        sl::queries::data::UniformRealRandomGenerator rrg_x(min_x, max_x);
+        sl::queries::data::UniformRealRandomGenerator rrg_y(min_y, max_y);
+        sl::queries::data::UniformIntRandomGenerator irg(min_weight, max_weight);
+
+        weighted_query_ptr_->InitRandomP(static_cast<size_t>(ui_->spinBox_P->value()), rrg_x, rrg_y, irg);
         ogl_->update();
+    }
+
+    void MainWindow::InitRandomQ() {
+        weighted_query_ptr_->ClearQ();
+
+        double min_x = ui_->doubleSpinBox_MinX->value();
+        double min_y = ui_->doubleSpinBox_MinY->value();
+        double max_x = ui_->doubleSpinBox_MaxX->value();
+        double max_y = ui_->doubleSpinBox_MaxY->value();
+
+        int min_weight = ui_->spinBox_MinW->value();
+        int max_weight = ui_->spinBox_MaxW->value();
+
+        sl::queries::data::UniformRealRandomGenerator rrg_x(min_x, max_x);
+        sl::queries::data::UniformRealRandomGenerator rrg_y(min_y, max_y);
+        sl::queries::data::UniformIntRandomGenerator irg(min_weight, max_weight);
+
+        weighted_query_ptr_->InitRandomQ(static_cast<size_t>(ui_->spinBox_Q->value()), rrg_x, rrg_y);
+        ogl_->update();
+    }
+
+    void MainWindow::InitRandom() {
+        weighted_query_ptr_->ClearOutput();
+        InitRandomP();
+        InitRandomQ();
     }
 
     void MainWindow::SaveImage() {

@@ -9,12 +9,21 @@
 
 namespace sl { namespace queries { namespace data {
 
+    struct Range {
+        double min_x;
+        double max_x;
+        double min_y;
+        double max_y;
+    };
+
     struct __align__(8) Point {
 
         Point() {}
 
-        //random initializer
-        Point(data::UniformRealRandomGenerator &r) : Point(static_cast<float>(r.Next()), static_cast<float>(r.Next())) {
+        Point(
+            data::UniformRealRandomGenerator &rrg_x,
+            data::UniformRealRandomGenerator &rrg_y) :
+            Point(static_cast<float>(rrg_x.Next()), static_cast<float>(rrg_y.Next())) {
         }
 
         Point(float x, float y) : x_(x), y_(y) {
@@ -48,8 +57,10 @@ namespace sl { namespace queries { namespace data {
 
         WeightedPoint() {}
 
-        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), static_cast<int>(r.Next() * 10) % 10) {
-        //WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1) {
+        WeightedPoint(
+            data::UniformRealRandomGenerator &rrg_x,
+            data::UniformRealRandomGenerator &rrg_y,
+            data::UniformIntRandomGenerator &irg) : WeightedPoint(Point(rrg_x, rrg_y), irg.Next() % 10) {
         }
 
         WeightedPoint(const Point &point, int weight) :

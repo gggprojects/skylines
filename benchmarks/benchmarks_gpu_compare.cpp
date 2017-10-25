@@ -29,7 +29,12 @@ std::map<int64_t, DataSize> experiment_value_filename_map;
 
 void GenerateFile(size_t input_p_size, size_t input_q_size) {
     DataSize ds(input_p_size, input_q_size);
-    wq.InitRandom(ds.input_p_size_, ds.input_q_size_);
+
+    sl::queries::data::UniformRealRandomGenerator rrg_x(0., 1.);
+    sl::queries::data::UniformRealRandomGenerator rrg_y(0., 1.);
+    sl::queries::data::UniformIntRandomGenerator irg(1, 10);
+
+    wq.InitRandom(ds.input_p_size_, ds.input_q_size_, rrg_x, rrg_y, irg);
     uint64_t current_size = experiment_value_filename_map.size();
     experiment_value_filename_map.insert(std::pair<int64_t, DataSize>(experiment_value_filename_map.size(), ds));
     wq.ToFile(GetFileName(experiment_value_filename_map[current_size]));

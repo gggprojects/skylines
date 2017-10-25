@@ -17,9 +17,25 @@ namespace sl { namespace queries {
         algorithms_[AlgorithmType::GPU_BRUTE_FORCE] = std::make_shared<algorithms::GPUBruteForce>(input_p_, input_q_);
     }
 
-    void WeightedQuery::InitRandom(size_t num_points_p, size_t num_points_q) {
-        input_p_.InitRandom(num_points_p);
-        input_q_.InitRandom(num_points_q);
+    void WeightedQuery::InitRandomP(size_t num_points_p,
+        data::UniformRealRandomGenerator &rrg_x,
+        data::UniformRealRandomGenerator &rrg_y,
+        data::UniformIntRandomGenerator &irg) {
+        input_p_.InitRandom(num_points_p, rrg_x, rrg_y, irg);
+    }
+
+    void WeightedQuery::InitRandomQ(size_t num_points_q,
+        data::UniformRealRandomGenerator &rrg_x,
+        data::UniformRealRandomGenerator &rrg_y) {
+        input_q_.InitRandom(num_points_q, rrg_x, rrg_y);
+    }
+
+    void WeightedQuery::InitRandom(size_t num_points_p, size_t num_points_q,
+        data::UniformRealRandomGenerator &rrg_x,
+        data::UniformRealRandomGenerator &rrg_y,
+        data::UniformIntRandomGenerator &irg) {
+        InitRandomP(num_points_p, rrg_x, rrg_y, irg);
+        InitRandomQ(num_points_q, rrg_x, rrg_y);
     }
 
     void WeightedQuery::Render() const {

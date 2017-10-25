@@ -16,8 +16,8 @@
 
 struct Experiment {
 public:
-    Experiment(size_t input_p_size, size_t input_q_size, std::string experiment_name, sl::queries::algorithms::DistanceType distance_type) :
-        input_p_size_(input_p_size), input_q_size_(input_q_size), experiment_name_(experiment_name), distance_type_(distance_type) {
+    Experiment(size_t input_p_size, size_t input_q_size, std::string experiment_name, sl::queries::algorithms::DistanceType distance_type, std::string filename) :
+        input_p_size_(input_p_size), input_q_size_(input_q_size), experiment_name_(experiment_name), distance_type_(distance_type), filename_(filename) {
     }
 
     size_t input_p_size_;
@@ -34,43 +34,50 @@ public:
     double kurtosis_;
     double z_score_;
     std::vector<sl::queries::data::Statistics> statistics_;
+    std::string filename_;
 
     std::string GetSizeString() const {
         return std::move(std::to_string(input_p_size_) + "x" + std::to_string(input_q_size_));
     }
 
-    std::string GetFileName() const {
-        return std::move(GetSizeString() + ".bin");
-    }
+    //std::string GetFileName() const {
+    //    return std::move(GetSizeString() + ".bin");
+    //}
 };
 
 sl::queries::WeightedQuery wq;
 std::multimap<int64_t, Experiment> experiments;
 sl::queries::algorithms::DistanceType distance_type;
 
-void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_space, bool create_files) {
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForce", distance_type)));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForceDiscarting", distance_type)));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadSorting", distance_type)));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForce", distance_type)));
-    //experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadSorting", distance_type)));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "GPUBruteForce", distance_type)));
+void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_space, bool create_files, std::string filename) {
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForce", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForceDiscarting", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadSorting", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForce", distance_type, filename)));
+    //experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadSorting", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "GPUBruteForce", distance_type, filename)));
 
     if (create_files) {
-        wq.InitRandom(input_p_size, input_q_size);
-        std::string filename = experiments.equal_range(problem_space).first->second.GetFileName();
+        sl::queries::data::UniformRealRandomGenerator rrg_x(0., 1.);
+        sl::queries::data::UniformRealRandomGenerator rrg_y(0., 1.);
+        sl::queries::data::UniformIntRandomGenerator irg(1, 10);
+
+        wq.InitRandom(input_p_size, input_q_size, rrg_x, rrg_y, irg);
         wq.ToFile(filename);
     }
 }
 
 void GenerateFiles(bool create_files) {
-    GenerateFile(2000, 100, 0, create_files);
-    GenerateFile(5000, 100, 1, create_files);
-    GenerateFile(10000, 100, 2, create_files);
-    GenerateFile(20000, 100, 3, create_files);
-    GenerateFile(50000, 100, 4, create_files);
-    GenerateFile(75000, 100, 5, create_files);
-    GenerateFile(100000, 100, 6, create_files);
+    GenerateFile(20000, 1, 0, false, "20000x1_middle.bin");
+    GenerateFile(20000, 1, 1, false, "20000x1_separated.bin");
+
+    //GenerateFile(2000, 100, 0, create_files);
+    //GenerateFile(5000, 100, 1, create_files);
+    //GenerateFile(10000, 100, 2, create_files);
+    //GenerateFile(20000, 100, 3, create_files);
+    //GenerateFile(50000, 100, 4, create_files);
+    //GenerateFile(75000, 100, 5, create_files);
+    //GenerateFile(100000, 100, 6, create_files);
 
     //GenerateFile(10, 10, 0, create_files);
     //GenerateFile(20, 10, 1, create_files);
@@ -169,7 +176,7 @@ void TransformCSV(const std::string &filename, const std::string &destination_fi
 
     WriteFile(destination_filename + "-improvement.csv", [](const Experiment &e) -> double { return e.baseline_; });
     WriteFile(destination_filename + "-running-time-min.csv", [](const Experiment &e) -> double { return e.min_usec_ / 1000000.0; });
-    WriteFile(destination_filename + "-variance.csv", [](const Experiment &e) -> double { return e.variance_; });
+    //WriteFile(destination_filename + "-variance.csv", [](const Experiment &e) -> double { return e.variance_; });
     WriteFile(destination_filename + "-ouput_size.csv", [](const Experiment &e) -> size_t { return e.statistics_[0].output_size_; });
     WriteFile(destination_filename + "-num_comparisons.csv", [](const Experiment &e) -> size_t { return e.statistics_[0].num_comparisions_; });
 
@@ -238,7 +245,8 @@ public:
         std::vector<std::pair<int64_t, uint64_t>> problemSpace;
 
         int64_t value = 0;
-        std::vector<int> iterations{ 100, 80, 10, 5, 3, 2, 1 };
+        //std::vector<int> iterations{ 100, 80, 10, 5, 3, 2, 1 };
+        std::vector<int> iterations{ 10, 10, 10, 5, 3, 2, 1 };
         //std::vector<int> iterations{ 1, 1, 1, 1, 1, 1, 1 };
         using map_it = std::multimap<int64_t, Experiment>::iterator;
         std::pair<map_it, map_it> iterators = experiments.equal_range(value);
@@ -252,7 +260,7 @@ public:
     }
 
     void setUp(int64_t experimentValue) override {
-        std::string filename = experiments.equal_range(experimentValue).first->second.GetFileName();
+        std::string filename = experiments.equal_range(experimentValue).first->second.filename_;
         wq.FromFile(filename);
     }
 
@@ -264,9 +272,9 @@ protected:
     sl::queries::WeightedQuery wq;
 };
 
-void AddStatistics(size_t input_q_size, std::string experiment_name, const sl::queries::data::Statistics &statistics, sl::queries::algorithms::DistanceType distance_type) {
+void AddStatistics(size_t input_q_size, std::string experiment_name, const sl::queries::data::Statistics &statistics, sl::queries::algorithms::DistanceType distance_type, const std::string &filename) {
     for (std::multimap<int64_t, Experiment>::iterator it = experiments.begin(); it != experiments.end(); it++) {
-        if (it->second.input_p_size_ == input_q_size && it->second.experiment_name_ == experiment_name && it->second.distance_type_ == distance_type) {
+        if (it->second.input_p_size_ == input_q_size && it->second.experiment_name_ == experiment_name && it->second.distance_type_ == distance_type && it->second.filename_ == filename) {
             it->second.statistics_.push_back(statistics);
             return;
         }
@@ -275,22 +283,22 @@ void AddStatistics(size_t input_q_size, std::string experiment_name, const sl::q
 
 BASELINE_F(SkylineComputation, SingleThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForce", statistics, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForce", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
 BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarting, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForceDiscarting", statistics, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForceDiscarting", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
 BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadSorting", statistics, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadSorting", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
 BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForce", statistics, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForce", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
 //BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
@@ -300,5 +308,5 @@ BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture
 
 BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 5, 10) {
     sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "GPUBruteForce", statistics, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "GPUBruteForce", statistics, distance_type, wq.GetFileNameLoaded());
 }

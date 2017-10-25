@@ -13,9 +13,17 @@ namespace sl { namespace queries {
     class skylines_engine_DLL_EXPORTS DataCapable {
     public:
         void Clear() {
+            ClearP();
+            ClearQ();
+            ClearOutput();
+        }
+
+        void ClearP() {
             input_p_.Clear();
+        }
+
+        void ClearQ() {
             input_q_.Clear();
-            output_.Clear();
         }
 
         void ClearOutput() {
@@ -30,6 +38,7 @@ namespace sl { namespace queries {
         const Data<data::WeightedPoint> & GetInputP() const { return input_p_; }
         const Data<data::Point> & GetInputQ() const { return input_q_; }
         const NonConstData<data::WeightedPoint> & GetOuput() const { return output_; }
+        const std::string& GetFileNameLoaded() const { return filename_loaded_; }
 
     private:
         bool ReadJsonFile(const std::string &filename);
@@ -45,6 +54,7 @@ namespace sl { namespace queries {
         Data<data::WeightedPoint> input_p_;
         Data<data::Point> input_q_;
         NonConstData<data::WeightedPoint> output_;
+        std::string filename_loaded_;
     };
 }}
 #endif

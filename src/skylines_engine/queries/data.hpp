@@ -35,12 +35,24 @@ namespace sl { namespace queries {
             return *this;
         }
 
-        void InitRandom(size_t num_points) {
-            data::UniformRealRandomGenerator r;
+        void InitRandom(size_t num_points,
+            data::UniformRealRandomGenerator &rrg_x,
+            data::UniformRealRandomGenerator &rrg_y,
+            data::UniformIntRandomGenerator &irg) {
             points_.clear();
             points_.reserve(num_points);
             for (size_t i = 0; i < num_points; i++) {
-                points_.emplace_back(T(r));
+                points_.emplace_back(T(rrg_x, rrg_y, irg));
+            }
+        }
+
+        void InitRandom(size_t num_points,
+            data::UniformRealRandomGenerator &rrg_x,
+            data::UniformRealRandomGenerator &rrg_y) {
+            points_.clear();
+            points_.reserve(num_points);
+            for (size_t i = 0; i < num_points; i++) {
+                points_.emplace_back(T(rrg_x, rrg_y));
             }
         }
 
