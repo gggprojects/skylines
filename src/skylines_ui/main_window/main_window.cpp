@@ -108,8 +108,17 @@ namespace sl { namespace ui { namespace main_window {
     void MainWindow::InitRandomQ() {
         weighted_query_ptr_->ClearQ();
 
-        sl::queries::data::UniformRealRandomGenerator rrg_x(0., 1.);
-        sl::queries::data::UniformRealRandomGenerator rrg_y(0., 1.);
+        double min_x = ui_->doubleSpinBox_MinX->value();
+        double min_y = ui_->doubleSpinBox_MinY->value();
+        double max_x = ui_->doubleSpinBox_MaxX->value();
+        double max_y = ui_->doubleSpinBox_MaxY->value();
+
+        int min_weight = ui_->spinBox_MinW->value();
+        int max_weight = ui_->spinBox_MaxW->value();
+
+        sl::queries::data::UniformRealRandomGenerator rrg_x(min_x, max_x);
+        sl::queries::data::UniformRealRandomGenerator rrg_y(min_y, max_y);
+        sl::queries::data::UniformIntRandomGenerator irg(min_weight, max_weight);
 
         weighted_query_ptr_->InitRandomQ(static_cast<size_t>(ui_->spinBox_Q->value()), rrg_x, rrg_y);
         ogl_->update();
