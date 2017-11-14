@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iostream>
 
 #include "queries/algorithms/multi_thread_brute_force.hpp"
 
@@ -49,7 +50,7 @@ namespace sl { namespace queries { namespace algorithms {
 
         size_t chunk = num_elements_p / concurent_threads_supported;
         std::vector<std::thread> workers;
-        std::vector<data::Statistics> partial_statistics(concurent_threads_supported + 1);
+        std::vector<data::Statistics> partial_statistics(concurent_threads_supported);
         for (size_t i = 0; i < concurent_threads_supported; i++) {
             data::Statistics *ps = &partial_statistics[i];
             workers.emplace_back(
@@ -61,6 +62,7 @@ namespace sl { namespace queries { namespace algorithms {
         }
 
         if (input_p_.GetPoints().cbegin() + (concurent_threads_supported * chunk) != input_p_.GetPoints().cend()) {
+            partial_statistics.resize(concurent_threads_supported + 1);
             data::Statistics *ps = &partial_statistics[concurent_threads_supported];
             workers.emplace_back(
                 std::thread([this, &chunk, &concurent_threads_supported, output, comparator_function, ps] {

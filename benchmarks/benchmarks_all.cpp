@@ -39,10 +39,6 @@ public:
     std::string GetSizeString() const {
         return std::move(std::to_string(input_p_size_) + "x" + std::to_string(input_q_size_));
     }
-
-    //std::string GetFileName() const {
-    //    return std::move(GetSizeString() + ".bin");
-    //}
 };
 
 sl::queries::WeightedQuery wq;
@@ -51,9 +47,10 @@ sl::queries::algorithms::DistanceType distance_type;
 
 void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_space, bool create_files, std::string filename) {
     experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForce", distance_type, filename)));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForceDiscarting", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForceDiscarding", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForceDiscarding", distance_type, filename)));
     experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadSorting", distance_type, filename)));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForce", distance_type, filename)));
+    //experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForce", distance_type, filename)));
     //experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadSorting", distance_type, filename)));
     experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "GPUBruteForce", distance_type, filename)));
 
@@ -68,24 +65,24 @@ void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_spa
 }
 
 void GenerateFiles(bool create_files) {
-    GenerateFile(20000, 1, 0, false, "20000x1_middle.bin");
-    GenerateFile(20000, 1, 1, false, "20000x1_separated.bin");
+    //GenerateFile(20000, 1, 0, false, "20000x1_middle.bin");
+    //GenerateFile(20000, 1, 1, false, "20000x1_separated.bin");
 
-    //GenerateFile(2000, 100, 0, create_files);
-    //GenerateFile(5000, 100, 1, create_files);
-    //GenerateFile(10000, 100, 2, create_files);
-    //GenerateFile(20000, 100, 3, create_files);
-    //GenerateFile(50000, 100, 4, create_files);
-    //GenerateFile(75000, 100, 5, create_files);
-    //GenerateFile(100000, 100, 6, create_files);
+    GenerateFile(2000, 100, 0, create_files, "2000x100.bin");
+    GenerateFile(5000, 100, 1, create_files, "5000x100.bin");
+    GenerateFile(10000, 100, 2, create_files, "10000x100.bin");
+    GenerateFile(20000, 100, 3, create_files, "20000x100.bin");
+    GenerateFile(50000, 100, 4, create_files, "50000x100.bin");
+    GenerateFile(75000, 100, 5, create_files, "75000x100.bin");
+    GenerateFile(100000, 100, 6, create_files, "100000x100.bin");
 
-    //GenerateFile(10, 10, 0, create_files);
-    //GenerateFile(20, 10, 1, create_files);
-    //GenerateFile(30, 10, 2, create_files);
-    //GenerateFile(40, 10, 3, create_files);
-    //GenerateFile(50, 10, 4, create_files);
-    //GenerateFile(70, 10, 5, create_files);
-    //GenerateFile(80, 10, 6, create_files);
+    //GenerateFile(10, 10, 0, create_files, "10x10.bin");
+    //GenerateFile(20, 10, 1, create_files, "20x10.bin");
+    //GenerateFile(30, 10, 2, create_files, "30x10.bin");
+    //GenerateFile(40, 10, 3, create_files, "40x10.bin");
+    //GenerateFile(50, 10, 4, create_files, "50x10.bin");
+    //GenerateFile(60, 10, 5, create_files, "60x10.bin");
+    //GenerateFile(70, 10, 6, create_files, "70x10.bin");
 }
 
 std::string GetHeader() {
@@ -286,9 +283,14 @@ BASELINE_F(SkylineComputation, SingleThreadBruteForce, InitFromBinaryFileFixture
     AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForce", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
-BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarting, InitFromBinaryFileFixture, 5, 10) {
-    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForceDiscarting", statistics, distance_type, wq.GetFileNameLoaded());
+BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarding, InitFromBinaryFileFixture, 5, 10) {
+    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForceDiscarding", statistics, distance_type, wq.GetFileNameLoaded());
+}
+
+BENCHMARK_F(SkylineComputation, MultiThreadBruteForceDiscarding, InitFromBinaryFileFixture, 5, 10) {
+    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForceDiscarding", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
 BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 5, 10) {
@@ -296,10 +298,10 @@ BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 
     AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadSorting", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
-BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
-    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type);
-    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForce", statistics, distance_type, wq.GetFileNameLoaded());
-}
+//BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
+//    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type);
+//    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForce", statistics, distance_type, wq.GetFileNameLoaded());
+//}
 
 //BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
 //    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type);

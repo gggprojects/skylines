@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "queries/algorithms/single_thread_brute_force_discarting.hpp"
 
 namespace sl { namespace queries { namespace algorithms {
@@ -7,7 +9,7 @@ namespace sl { namespace queries { namespace algorithms {
     }
 
     template<class Comparator>
-    data::Statistics SingleThreadBruteForceDiscarting::_Compute(Comparator comparator_funciton, NonConstData<data::WeightedPoint> *output) {
+    data::Statistics SingleThreadBruteForceDiscarting::_Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output) {
         std::vector<bool> needs_to_be_checked(input_p_.GetPoints().size(), true);
 
         data::Statistics statistics;
@@ -20,7 +22,7 @@ namespace sl { namespace queries { namespace algorithms {
                 bool is_skyline = true;
                 while (is_skyline && b != input_p_.GetPoints().cend()) {
                     if (a != b && *b_needs_to_be_checked) {
-                        int dominator = Dominator(*a, *b, input_q_.GetPoints(), comparator_funciton, &statistics);
+                        int dominator = Dominator(*a, *b, input_q_.GetPoints(), comparator_function, &statistics);
                         if (dominator == 1) {
                             is_skyline = false;
                         } else if (dominator == 0) {

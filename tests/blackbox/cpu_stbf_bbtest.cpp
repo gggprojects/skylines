@@ -108,7 +108,7 @@ void RunAll(sl::queries::WeightedQuery &wq, sl::queries::algorithms::DistanceTyp
     RunAlgorithm(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, &stbf_output, distance_type);
 
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> stbfd_output;
-    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING, &stbfd_output, stbf_output, distance_type);
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, &stbfd_output, stbf_output, distance_type);
 
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> sts_output;
     RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, &sts_output, stbfd_output, distance_type);
@@ -119,8 +119,11 @@ void RunAll(sl::queries::WeightedQuery &wq, sl::queries::algorithms::DistanceTyp
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> mts_output;
     RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, &mts_output, mtbf_output, distance_type);
 
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> mtbfd_output;
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, &mtbfd_output, mts_output, distance_type);
+
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> gpubf_output;
-    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, &gpubf_output, mts_output, distance_type);
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, &gpubf_output, mtbfd_output, distance_type);
     std::cout << '\n';
 }
 

@@ -61,7 +61,7 @@ namespace sl { namespace ui { namespace main_window {
     }
 
     void MainWindow::RunSingleThreadBruteForceWithDiscarting() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING, distance_type_);
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type_);
         ogl_->update();
     }
 
