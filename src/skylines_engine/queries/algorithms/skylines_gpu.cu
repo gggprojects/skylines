@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <set>
 
 #include <cuda_runtime.h>
 
@@ -34,7 +35,7 @@ __device__ void _ComputePartialSkyline(
     int input_q_size,
     Comparator comparator_function,
     sl::queries::data::Statistics *statistics,
-    unsigned int *result) {
+    float *result) {
 
     __shared__ sl::queries::data::WeightedPoint shared_input_p[SHARED_MEM_ELEMENTS];
 
@@ -51,20 +52,31 @@ __device__ void _ComputePartialSkyline(
         __syncthreads();
 
         if (is_skyline) {
-            #pragma unroll SHARED_MEM_ELEMENTS
             for (int i = 0; i < SHARED_MEM_ELEMENTS; i++) {
-                if (current_input_p_pos + i != global_pos &&current_input_p_pos + i < input_p_size) { // do not check against the same point
-                    if (IsDominated_impl(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, comparator_function, &thread_statistics)) {
+                if (current_input_p_pos + i != global_pos && current_input_p_pos + i < input_p_size) { // do not check against the same point
+                    if (sl::queries::algorithms::IsDominated(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, comparator_function)) {
                         is_skyline = false;
                         break;
                     }
+                    thread_statistics.num_comparisions_++;
                 }
             }
         }
         __syncthreads();
     }
 
-    result[global_pos] = is_skyline ? 1 : 0;
+    if (is_skyline) {
+        float max_distance = 0;
+        for (int i = 0; i < input_q_size; i++) {
+            float distance = skyline_candidate.SquaredDistance(device_input_q[i]);
+            if (distance > max_distance) {
+                max_distance = distance;
+            }
+        }
+        result[global_pos] = max_distance;
+    } else {
+        result[global_pos] = -1;
+    }
 
     atomicAdd(&statistics->num_comparisions_, thread_statistics.num_comparisions_);
 }
@@ -75,7 +87,7 @@ __global__ void ComputePartialSkyline(
     int input_q_size,
     sl::queries::algorithms::DistanceType distance_type,
     sl::queries::data::Statistics *statistics,
-    unsigned int *result) {
+    float *result) {
 
     switch (distance_type) {
         case sl::queries::algorithms::DistanceType::Neartest:
@@ -118,7 +130,8 @@ extern "C" void ComputeGPUSkyline(
     const std::vector<sl::queries::data::Point> &input_q,
     std::vector<sl::queries::data::WeightedPoint> *output,
     sl::queries::algorithms::DistanceType distance_type,
-    sl::queries::data::Statistics *statistics) {
+    size_t top_k,
+    sl::queries::data::Statistics *stadistics_results) {
 
     sl::gpu::GPUStream gpu_stream;
 
@@ -136,9 +149,9 @@ extern "C" void ComputeGPUSkyline(
 
     //copy statistics
     sl::gpu::GPUMemory<sl::queries::data::Statistics> statistics_d(1);
-    statistics_d.UploadToDeviceAsync(statistics, 1, gpu_stream);
+    statistics_d.UploadToDeviceAsync(stadistics_results, 1, gpu_stream);
 
-    sl::gpu::GPUMemory<unsigned int> result_d(input_p_size_SHARED_MEM_SIZE_multiple);
+    sl::gpu::GPUMemory<float> result_d(input_p_size_SHARED_MEM_SIZE_multiple);
     /*
     MAX number of threads per MS is 2048.
     MAX number of threads per block 1024 => max blockDim.y = 1
@@ -147,18 +160,30 @@ extern "C" void ComputeGPUSkyline(
     int total_numBlocks = static_cast<int>(divUp(input_p_size, static_cast<size_t>(threadsPerBlock.x * threadsPerBlock.y)));
     dim3 grid(total_numBlocks, 1);
 
-    ComputePartialSkyline <<< grid, threadsPerBlock, 0, gpu_stream() >>> (input_p_d(), input_p_size, input_q_size, distance_type, statistics_d(), result_d());
-
-    std::vector<unsigned int> result(input_p_size);
+    ComputePartialSkyline<<< grid, threadsPerBlock, 0, gpu_stream() >>> (input_p_d(), input_p_size, input_q_size, distance_type, statistics_d(), result_d());
+    std::vector<float> result(input_p_size);
     result_d.DownloadToHostAsync(result.data(), input_p_size, gpu_stream);
-    statistics_d.DownloadToHostAsync(statistics, 1, gpu_stream);
+    statistics_d.DownloadToHostAsync(stadistics_results, gpu_stream);
 
     gpu_stream.Syncronize();
 
+    std::set<sl::queries::algorithms::PointStatistics> points;
+    float max_distance_in_set = 99999;
     for (size_t i = 0; i < result.size(); i++) {
-        if (result[i] == 1) {
-            output->push_back(input_p[i]);
+        float distance = result[i];
+        if (distance != -1) {
+            //it's a skyline
+            if (points.size() < top_k || distance < max_distance_in_set) {
+                points.insert(sl::queries::algorithms::PointStatistics(input_p[i], std::make_pair(0.f, distance)));
+                if (points.size() > top_k)
+                    points.erase(points.begin());
+                max_distance_in_set = points.begin()->s_.second;
+            }
         }
+    }
+
+    for (const sl::queries::algorithms::PointStatistics &ps : points) {
+        output->emplace_back(ps.wp_);
     }
 }
 

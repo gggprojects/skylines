@@ -26,11 +26,11 @@ namespace sl { namespace ui { namespace main_window {
         ui_->setupUi(this);
         ogl_ = new ogl::OGLWidget(weighted_query_ptr_, this);
         ui_->horizontalLayout_2->addWidget(ogl_);
-        connect(ui_->pushButton_STS, &QPushButton::clicked, this, &MainWindow::RunSingleThreadSorting);
+
         connect(ui_->pushButton_STBF, &QPushButton::clicked, this, &MainWindow::RunSingleThreadBruteForce);
         connect(ui_->pushButton_STBFDiscarting, &QPushButton::clicked, this, &MainWindow::RunSingleThreadBruteForceWithDiscarting);
-        connect(ui_->pushButton_MTBF, &QPushButton::clicked, this, &MainWindow::RunMultiThreadBruteForce);
-        connect(ui_->pushButton_MTS, &QPushButton::clicked, this, &MainWindow::RunMultiThreadSorting);
+        connect(ui_->pushButton_MTBFD, &QPushButton::clicked, this, &MainWindow::RunMultiThreadBruteForceDiscarting);
+        connect(ui_->pushButton_STS, &QPushButton::clicked, this, &MainWindow::RunSingleThreadSorting);
         connect(ui_->pushButton_GPUBF, &QPushButton::clicked, this, &MainWindow::RunGPUBruteForce);
 
         connect(ui_->actionSave_image_to_file, &QAction::triggered, this, &MainWindow::SaveImage);
@@ -49,10 +49,16 @@ namespace sl { namespace ui { namespace main_window {
         connect(ui_->listWidget_points, &QListWidget::itemSelectionChanged, this, &MainWindow::UpdateRender);
         connect(ui_->listWidget_points, &QListWidget::itemDoubleClicked, this, &MainWindow::RemoveSelectedPoint);
         connect(ui_->radioButton_Neartest, &QRadioButton::toggled, this, &MainWindow::DistanceTypeChanged);
+
+        connect(ui_->spinBox_topK, SIGNAL(valueChanged(int)), this, SLOT(SetTopK(int)));
     }
 
     MainWindow::~MainWindow() {
         delete ui_;
+    }
+
+    void MainWindow::SetTopK(int top_k) {
+        weighted_query_ptr_->SetTopK(static_cast<size_t>(top_k));
     }
 
     void MainWindow::RunSingleThreadBruteForce() {
@@ -70,14 +76,8 @@ namespace sl { namespace ui { namespace main_window {
         ogl_->update();
     }
 
-    void MainWindow::RunMultiThreadBruteForce() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type_);
-        ogl_->update();
-    }
-
-    void MainWindow::RunMultiThreadSorting() {
-        //weighted_query_ptr_->FromFile("input_crash.json");
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type_);
+    void MainWindow::RunMultiThreadBruteForceDiscarting() {
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type_);
         ogl_->update();
     }
 
@@ -128,6 +128,10 @@ namespace sl { namespace ui { namespace main_window {
         weighted_query_ptr_->ClearOutput();
         InitRandomP();
         InitRandomQ();
+
+        size_t num_p = weighted_query_ptr_->GetInputP().GetPoints().size();
+        ui_->spinBox_topK->setMaximum(static_cast<int>(num_p));
+        ui_->spinBox_topK->setValue(static_cast<int>(num_p));
     }
 
     void MainWindow::SaveImage() {
@@ -171,6 +175,10 @@ namespace sl { namespace ui { namespace main_window {
             QMessageBox::warning(this, "Error at loading points", "Error at loading points");
         }
 
+        size_t num_p = weighted_query_ptr_->GetInputP().GetPoints().size();
+        ui_->spinBox_topK->setMaximum(static_cast<int>(num_p));
+        ui_->spinBox_topK->setValue(static_cast<int>(num_p));
+
         ogl_->update();
     }
 
@@ -189,7 +197,7 @@ namespace sl { namespace ui { namespace main_window {
     }
     
     void MainWindow::PointSelected(int x, int y) {
-        QVector3D projected_point = ogl_->Unproject(QVector2D(x, y));
+        QVector3D projected_point = ogl_->Unproject(QVector2D(static_cast<float>(x), static_cast<float>(y)));
         size_t input_point_position = weighted_query_ptr_->GetClosetsPointPosition(queries::data::Point(projected_point.x(), projected_point.y()));
         ui_->listWidget_points->addItem(QString::fromStdString(std::to_string(input_point_position)));
         ogl_->update();

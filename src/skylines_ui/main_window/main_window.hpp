@@ -24,6 +24,13 @@ namespace sl { namespace ui { namespace main_window {
 
         void UpdateRender();
         void Render();
+    //signals:
+        //void Run(queries::WeightedQuery::AlgorithmType algorithm_type);
+        //void SetTopK(int top_k);
+
+    public slots:
+        void SetTopK(int top_k);
+
     private:
         void InitRandomP();
         void InitRandomQ();
@@ -33,8 +40,7 @@ namespace sl { namespace ui { namespace main_window {
         void RunSingleThreadBruteForce();
         void RunSingleThreadBruteForceWithDiscarting();
         void RunSingleThreadSorting();
-        void RunMultiThreadBruteForce();
-        void RunMultiThreadSorting();
+        void RunMultiThreadBruteForceDiscarting();
         void RunGPUBruteForce();
 
         void SerializeInputPoints();

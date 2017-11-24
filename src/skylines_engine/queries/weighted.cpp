@@ -7,13 +7,11 @@
 
 namespace sl { namespace queries {
     WeightedQuery::WeightedQuery() :
-        SkylineElement("WeightedQuery", "info"), algorithms_(7) {
+        SkylineElement("WeightedQuery", "info"), algorithms_(5) {
 
         algorithms_[AlgorithmType::SINGLE_THREAD_BRUTE_FORCE] = std::make_shared<algorithms::SingleThreadBruteForce>(input_p_, input_q_);
         algorithms_[AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING] = std::make_shared<algorithms::SingleThreadBruteForceDiscarting>(input_p_, input_q_);
         algorithms_[AlgorithmType::SINGLE_THREAD_SORTING] = std::make_shared<algorithms::SingleThreadSorting>(input_p_, input_q_);
-        algorithms_[AlgorithmType::MULTI_THREAD_BRUTE_FORCE] = std::make_shared<algorithms::MultiThreadBruteForce>(input_p_, input_q_);
-        algorithms_[AlgorithmType::MULTI_THREAD_SORTING] = std::make_shared < algorithms::MultiThreadSorting > (input_p_, input_q_);
         algorithms_[AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING] = std::make_shared<algorithms::MultiThreadBruteForceDiscading>(input_p_, input_q_);
         algorithms_[AlgorithmType::GPU_BRUTE_FORCE] = std::make_shared<algorithms::GPUBruteForce>(input_p_, input_q_);
     }
@@ -82,4 +80,9 @@ namespace sl { namespace queries {
         return algorithms_[type]->Run(&output_, distance_type);
     }
 
+    void WeightedQuery::SetTopK(size_t top_k) {
+        for (std::shared_ptr<algorithms::Algorithm> alg_ptr : algorithms_) {
+            alg_ptr->SetTopK(top_k);
+        }
+    }
 }}

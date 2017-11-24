@@ -9,41 +9,89 @@ namespace sl { namespace queries { namespace algorithms {
     }
 
     template<class Comparator>
-    data::Statistics SingleThreadBruteForceDiscarting::_Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output) {
-        std::vector<bool> needs_to_be_checked(input_p_.GetPoints().size(), true);
+    data::Statistics SingleThreadBruteForceDiscarting::ComputeSkylines(Comparator comparator_function, std::vector<data::WeightedPoint> *skylines) {
+        data::Statistics stats_results;
 
-        data::Statistics statistics;
-        std::vector<bool>::iterator a_needs_to_be_checked = needs_to_be_checked.begin();
-        for (std::vector<data::WeightedPoint>::const_iterator a = input_p_.GetPoints().cbegin(); a != input_p_.GetPoints().cend(); ++a, ++a_needs_to_be_checked) {
-            if (*a_needs_to_be_checked) {
-                std::vector<bool>::iterator b_needs_to_be_checked = needs_to_be_checked.begin();
-                std::vector<data::WeightedPoint>::const_iterator b = input_p_.GetPoints().cbegin();
+        const sl::queries::data::Point *input_q = input_q_.GetPoints().data();
+        const int q_size = static_cast<int>(input_q_.GetPoints().size());
+
+        std::vector<bool> needs_to_be_checked(input_p_.GetPoints().size(), true);
+        std::vector<bool>::iterator skyline_candidate_needs_to_be_checked = needs_to_be_checked.begin();
+        std::vector<data::WeightedPoint>::const_iterator skyline_candidate;
+        for (skyline_candidate = input_p_.GetPoints().cbegin(); skyline_candidate != input_p_.GetPoints().cend(); ++skyline_candidate, ++skyline_candidate_needs_to_be_checked) {
+            if (*skyline_candidate_needs_to_be_checked) {
+                std::vector<bool>::iterator dominator_candidate_needs_to_be_checked = needs_to_be_checked.begin();
+                std::vector<data::WeightedPoint>::const_iterator dominator_candidate = input_p_.GetPoints().cbegin();
 
                 bool is_skyline = true;
-                while (is_skyline && b != input_p_.GetPoints().cend()) {
-                    if (a != b && *b_needs_to_be_checked) {
-                        int dominator = Dominator(*a, *b, input_q_.GetPoints(), comparator_function, &statistics);
+                while (is_skyline && dominator_candidate != input_p_.GetPoints().cend()) {
+                    if (skyline_candidate != dominator_candidate && *dominator_candidate_needs_to_be_checked) {
+                        int dominator = Dominator(*skyline_candidate, *dominator_candidate, input_q, q_size, comparator_function);
                         if (dominator == 1) {
                             is_skyline = false;
                         } else if (dominator == 0) {
-                            *b_needs_to_be_checked = false;
+                            *dominator_candidate_needs_to_be_checked = false;
                         }
+                        stats_results.num_comparisions_++;
                     }
-                    ++b;
-                    ++b_needs_to_be_checked;
+                    ++dominator_candidate;
+                    ++dominator_candidate_needs_to_be_checked;
                 }
 
                 if (is_skyline) {
-                    output->Add(*a);
+                    skylines->emplace_back(*skyline_candidate);
                 }
             }
         }
 
-        statistics.output_size_ = output->Points().size();
-        return statistics;
+        return stats_results;
     }
 
+    template<class Comparator>
+    data::Statistics SingleThreadBruteForceDiscarting::_Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output) {
+        std::vector<data::WeightedPoint> skylines;
+        data::Statistics stats_results = ComputeSkylines(comparator_function, &skylines);
+        ComputeTopK(skylines, output);
+        return stats_results;
+    }
+
+    //template<class Comparator>
+    //data::Statistics SingleThreadBruteForceDiscarting::_Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output) {
+    //    std::vector<bool> needs_to_be_checked(input_p_.GetPoints().size(), true);
+    //
+    //    data::Statistics statistics;
+    //    std::vector<bool>::iterator a_needs_to_be_checked = needs_to_be_checked.begin();
+    //    for (std::vector<data::WeightedPoint>::const_iterator a = input_p_.GetPoints().cbegin(); a != input_p_.GetPoints().cend(); ++a, ++a_needs_to_be_checked) {
+    //        if (*a_needs_to_be_checked) {
+    //            std::vector<bool>::iterator b_needs_to_be_checked = needs_to_be_checked.begin();
+    //            std::vector<data::WeightedPoint>::const_iterator b = input_p_.GetPoints().cbegin();
+    //
+    //            bool is_skyline = true;
+    //            while (is_skyline && b != input_p_.GetPoints().cend()) {
+    //                if (a != b && *b_needs_to_be_checked) {
+    //                    int dominator = Dominator(*a, *b, input_q_.GetPoints(), comparator_function, &statistics);
+    //                    if (dominator == 1) {
+    //                        is_skyline = false;
+    //                    } else if (dominator == 0) {
+    //                        *b_needs_to_be_checked = false;
+    //                    }
+    //                }
+    //                ++b;
+    //                ++b_needs_to_be_checked;
+    //            }
+    //
+    //            if (is_skyline) {
+    //                output->Add(*a);
+    //            }
+    //        }
+    //    }
+    //
+    //    statistics.output_size_ = output->Points().size();
+    //    return statistics;
+    //}
+
     data::Statistics SingleThreadBruteForceDiscarting::Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
+        //std::cout << "Computing STBFD\n";
         switch (distance_type) {
             case sl::queries::algorithms::DistanceType::Neartest:
                 return _Compute([](const float a, const float b) -> bool { return a <= b; }, output);

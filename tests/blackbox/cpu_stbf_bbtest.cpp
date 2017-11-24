@@ -10,13 +10,14 @@
 #include "time_utils.hpp"
 
 struct InputParameters {
-    int num_points_p_;
-    int num_points_q_;
+    size_t num_points_p_;
+    size_t num_points_q_;
+    size_t top_k_;
 public:
     InputParameters() {}
 
-    InputParameters(int num_points_p, int num_points_q) :
-        num_points_p_(num_points_p), num_points_q_(num_points_q) {
+    InputParameters(size_t num_points_p, size_t num_points_q, size_t top_k) :
+        num_points_p_(num_points_p), num_points_q_(num_points_q), top_k_(top_k) {
     }
 };
 
@@ -34,12 +35,13 @@ public:
         data::UniformRealRandomGenerator rrg_y(0., 1.);
         data::UniformIntRandomGenerator irg(1, 10);
 
-        wq.InitRandom(input_parameters_.num_points_p_, input_parameters_.num_points_q_,
-            rrg_x, rrg_y, irg);
-        wq.ToFile("test.json");
+        wq.SetTopK(input_parameters_.top_k_);
+        wq.InitRandom(input_parameters_.num_points_p_, input_parameters_.num_points_q_, rrg_x, rrg_y, irg);
+        //wq.ToFile("test.json");
     }
 
     virtual void TearDown() {
+
     }
 
 protected:
@@ -68,6 +70,7 @@ bool CheckOuput(sl::queries::NonConstData<sl::queries::data::WeightedPoint> &a, 
     }
     bool equal = std::equal(a.Points().begin(), a.Points().end(), b.Points().begin());
     EXPECT_TRUE(equal) << " Line: " << line;
+
     return equal;
 }
 
@@ -110,20 +113,14 @@ void RunAll(sl::queries::WeightedQuery &wq, sl::queries::algorithms::DistanceTyp
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> stbfd_output;
     RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, &stbfd_output, stbf_output, distance_type);
 
-    sl::queries::NonConstData<sl::queries::data::WeightedPoint> sts_output;
-    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, &sts_output, stbfd_output, distance_type);
-
-    sl::queries::NonConstData<sl::queries::data::WeightedPoint> mtbf_output;
-    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, &mtbf_output, sts_output, distance_type);
-
-    sl::queries::NonConstData<sl::queries::data::WeightedPoint> mts_output;
-    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, &mts_output, mtbf_output, distance_type);
-
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> mtbfd_output;
-    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, &mtbfd_output, mts_output, distance_type);
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, &mtbfd_output, stbfd_output, distance_type);
+
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> sts_output;
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, &sts_output, stbf_output, distance_type);
 
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> gpubf_output;
-    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, &gpubf_output, mtbfd_output, distance_type);
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, &gpubf_output, stbf_output, distance_type);
     std::cout << '\n';
 }
 
@@ -133,37 +130,51 @@ TEST_P(InputInitializerSmall, TestOutputCorrectness) {
 }
 
 INSTANTIATE_TEST_CASE_P(InstantiationName, InputInitializerSmall, ::testing::Values(
-    InputParameters(0, 0),
-    InputParameters(0, 1),
-    InputParameters(1, 0),
-    InputParameters(1, 1),
-    InputParameters(10, 10),
-    InputParameters(32, 10),
-    InputParameters(33, 10),
-    InputParameters(64, 10),
-    InputParameters(65, 10),
-    InputParameters(100, 10),
-    InputParameters(128, 10),
-    InputParameters(1000, 10),
-    InputParameters(1024, 10),
-    InputParameters(1025, 10),
-    InputParameters(2048, 10),
-    InputParameters(2049, 10),
+    InputParameters(0, 0, 0),
+    InputParameters(0, 1, 0),
+    InputParameters(1, 0, 1),
 
-    InputParameters(0, 10),
-    InputParameters(1, 10),
-    InputParameters(10, 100),
-    InputParameters(32, 100),
-    InputParameters(33, 100),
-    InputParameters(64, 100),
-    InputParameters(65, 100),
-    InputParameters(100, 1000),
-    InputParameters(128, 1000),
-    InputParameters(1000, 1000),
-    InputParameters(1024, 2000),
-    InputParameters(1025, 3000),
-    InputParameters(2048, 4000),
-    InputParameters(2049, 8192)
+    InputParameters(1, 1, 1),
+    InputParameters(10, 10, 10),
+    InputParameters(32, 10, 32),
+    InputParameters(33, 10, 33),
+    InputParameters(64, 10, 64),
+    InputParameters(65, 10, 65),
+    InputParameters(100, 10, 100),
+    InputParameters(128, 10, 128),
+    InputParameters(1000, 10, 1000),
+    InputParameters(1024, 10, 1024),
+    InputParameters(1025, 10, 1025),
+    InputParameters(2048, 10, 2048),
+    InputParameters(2049, 10, 2049),
+
+    InputParameters(1, 10, 1),
+    InputParameters(10, 100, 10),
+    InputParameters(32, 100, 32),
+    InputParameters(33, 100, 33),
+    InputParameters(64, 100, 64),
+    InputParameters(65, 100, 65),
+    InputParameters(100, 1000, 100),
+    InputParameters(128, 1000, 128),
+    InputParameters(1000, 1000, 1000),
+    InputParameters(1024, 2000, 1024),
+    InputParameters(1025, 3000, 1025),
+    InputParameters(2048, 4000, 2048),
+    InputParameters(2049, 8192, 2049),
+
+    InputParameters(21, 5, 4),
+    InputParameters(10, 100, 5),
+    InputParameters(32, 10, 5),
+    InputParameters(33, 100, 10),
+    InputParameters(64, 100, 10),
+    InputParameters(65, 100, 10),
+    InputParameters(100, 1000, 20),
+    InputParameters(128, 1000, 20),
+    InputParameters(1000, 1000, 30),
+    InputParameters(1024, 2000, 30),
+    InputParameters(1025, 3000, 30),
+    InputParameters(2048, 4000, 40),
+    InputParameters(2049, 8192, 50)
 ));
 
 //INSTANTIATE_TEST_CASE_P(InstantiationName, InputInitializerBig, ::testing::Values(

@@ -60,7 +60,7 @@ namespace sl { namespace queries { namespace data {
         WeightedPoint(
             data::UniformRealRandomGenerator &rrg_x,
             data::UniformRealRandomGenerator &rrg_y,
-            data::UniformIntRandomGenerator &irg) : WeightedPoint(Point(rrg_x, rrg_y), irg.Next() % 10) {
+            data::UniformIntRandomGenerator &irg) : WeightedPoint(Point(rrg_x, rrg_y), irg.Next() % 11) {
         }
 
         WeightedPoint(const Point &point, int weight) :
@@ -71,19 +71,6 @@ namespace sl { namespace queries { namespace data {
         __host__ __device__ WeightedPoint(const WeightedPoint &other) :
             point_(other.point_),
             weight_(other.weight_) {
-        }
-
-        template<class Comparator>
-        bool IsDominated(const WeightedPoint &other, const std::vector<Point> &q, Comparator comparator, Statistics *statistics) const {
-            for (const Point p_q : q) {
-                float a_distance = Distance(p_q);
-                float b_distance = other.Distance(p_q);
-                ComputeStatistics(a_distance, b_distance, statistics);
-                if (comparator(a_distance, b_distance)) {
-                    return false;
-                }
-            }
-            return true;
         }
 
         bool operator==(const WeightedPoint &other) const {

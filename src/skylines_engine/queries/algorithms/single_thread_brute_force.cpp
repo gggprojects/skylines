@@ -1,37 +1,79 @@
+#include <iostream>
+
 #include "queries/algorithms/single_thread_brute_force.hpp"
 
 namespace sl { namespace queries { namespace algorithms {
+
     data::Statistics SingleThreadBruteForce::Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
         if (!Init(output)) return data::Statistics();
         return Compute(output, distance_type);
     }
 
     template<class Comparator>
-    data::Statistics SingleThreadBruteForce::_Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output) {
-        data::Statistics statistics;
-        for (std::vector<data::WeightedPoint>::const_iterator skyline_candidate = input_p_.GetPoints().cbegin();
-            skyline_candidate != input_p_.GetPoints().cend(); ++skyline_candidate) {
+    data::Statistics SingleThreadBruteForce::ComputeSkylines(Comparator comparator_function, std::vector<data::WeightedPoint> *skylines) {
+        data::Statistics stats_results;
+        std::vector<data::WeightedPoint>::const_iterator skyline_candidate;
+
+        const sl::queries::data::Point *input_q = input_q_.GetPoints().data();
+        const int q_size = static_cast<int>(input_q_.GetPoints().size());
+
+        for (skyline_candidate = input_p_.GetPoints().cbegin();
+            skyline_candidate != input_p_.GetPoints().cend();
+            ++skyline_candidate) {
             std::vector<data::WeightedPoint>::const_iterator dominator_candidate = input_p_.GetPoints().cbegin();
             bool is_skyline = true;
             while (is_skyline && dominator_candidate != input_p_.GetPoints().cend()) {
                 if (skyline_candidate != dominator_candidate) {
-                    if (IsDominated(*skyline_candidate, *dominator_candidate, input_q_.GetPoints(), comparator_function, &statistics)) {
+                    if (IsDominated(*skyline_candidate, *dominator_candidate, input_q, q_size, comparator_function)) {
                         is_skyline = false;
                     }
+                    stats_results.num_comparisions_++;
                 }
                 ++dominator_candidate;
             }
 
             if (is_skyline) {
-                output->Add(*skyline_candidate);
+                skylines->emplace_back(*skyline_candidate);
             }
         }
-
-        statistics.output_size_ = output->Points().size();
-        return statistics;
+        return stats_results;
     }
 
+    template<class Comparator>
+    data::Statistics SingleThreadBruteForce::_Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output) {
+        std::vector<data::WeightedPoint> skylines;
+        data::Statistics stats_results = ComputeSkylines(comparator_function, &skylines);
+        ComputeTopK(skylines, output);
+        return stats_results;
+    }
+
+    //template<class Comparator>
+    //data::Statistics SingleThreadBruteForce::_Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output) {
+    //    data::Statistics statistics;
+    //    for (std::vector<data::WeightedPoint>::const_iterator skyline_candidate = input_p_.GetPoints().cbegin();
+    //        skyline_candidate != input_p_.GetPoints().cend(); ++skyline_candidate) {
+    //        std::vector<data::WeightedPoint>::const_iterator dominator_candidate = input_p_.GetPoints().cbegin();
+    //        bool is_skyline = true;
+    //        while (is_skyline && dominator_candidate != input_p_.GetPoints().cend()) {
+    //            if (skyline_candidate != dominator_candidate) {
+    //                if (IsDominated(*skyline_candidate, *dominator_candidate, input_q_.GetPoints(), comparator_function, &statistics)) {
+    //                    is_skyline = false;
+    //                }
+    //            }
+    //            ++dominator_candidate;
+    //        }
+    //
+    //        if (is_skyline) {
+    //            output->Add(*skyline_candidate);
+    //        }
+    //    }
+    //
+    //    statistics.output_size_ = output->Points().size();
+    //    return statistics;
+    //}
+
     data::Statistics SingleThreadBruteForce::Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
+        //std::cout << "Computing STBF\n";
         switch (distance_type) {
             case sl::queries::algorithms::DistanceType::Neartest:
                 return _Compute([](const float a, const float b) -> bool { return a <= b; }, output);

@@ -326,6 +326,27 @@
               </layout>
              </item>
              <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_8">
+               <item>
+                <widget class="QLabel" name="label_9">
+                 <property name="text">
+                  <string>Top K</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="spinBox_topK">
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="maximum">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
               <widget class="QPushButton" name="pushButton_STBF">
                <property name="text">
                 <string>Single thread brute force</string>
@@ -340,23 +361,16 @@
               </widget>
              </item>
              <item>
+              <widget class="QPushButton" name="pushButton_MTBFD">
+               <property name="text">
+                <string>Multithread brute force discarting</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="pushButton_STS">
                <property name="text">
                 <string>Single thread sorted</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pushButton_MTBF">
-               <property name="text">
-                <string>Multithread brute force</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pushButton_MTS">
-               <property name="text">
-                <string>Multithread sorted</string>
                </property>
               </widget>
              </item>

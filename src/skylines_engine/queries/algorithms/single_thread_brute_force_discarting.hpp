@@ -16,7 +16,11 @@ namespace sl { namespace queries { namespace algorithms {
         data::Statistics Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type);
 
         template<class Comparator>
-        data::Statistics _Compute(Comparator comparator_funciton, NonConstData<data::WeightedPoint> *output);
+        data::Statistics ComputeSkylines(Comparator comparator_function, std::vector<data::WeightedPoint> *skylines);
+
+        template<class Comparator>
+        data::Statistics _Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output);
+
     };
 }}}
 
