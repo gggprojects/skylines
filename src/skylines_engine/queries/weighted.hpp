@@ -8,6 +8,7 @@
 #include "queries/algorithms/single_thread_brute_force.hpp"
 #include "queries/algorithms/single_thread_brute_force_discarting.hpp"
 #include "queries/algorithms/single_thread_sorting.hpp"
+#include "queries/algorithms/multi_thread_brute_force.hpp"
 #include "queries/algorithms/multi_thread_brute_force_discarding.hpp"
 #include "queries/algorithms/gpu_brute_force.hpp"
 
@@ -21,8 +22,9 @@ namespace sl { namespace queries {
             SINGLE_THREAD_BRUTE_FORCE = 0,
             SINGLE_THREAD_BRUTE_FORCE_DISCARDING = 1,
             SINGLE_THREAD_SORTING = 2,
-            MULTI_THREAD_BRUTE_FORCE_DISCARDING = 3,
-            GPU_BRUTE_FORCE = 4
+            MULTI_THREAD_BRUTE_FORCE = 3,
+            MULTI_THREAD_BRUTE_FORCE_DISCARDING = 4,
+            GPU_BRUTE_FORCE = 5
         };
 
         WeightedQuery();

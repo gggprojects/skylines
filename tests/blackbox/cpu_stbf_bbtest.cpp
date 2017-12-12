@@ -125,7 +125,7 @@ void RunAll(sl::queries::WeightedQuery &wq, sl::queries::algorithms::DistanceTyp
 }
 
 TEST_P(InputInitializerSmall, TestOutputCorrectness) {
-    RunAll(wq, sl::queries::algorithms::DistanceType::Neartest);
+    RunAll(wq, sl::queries::algorithms::DistanceType::Nearest);
     RunAll(wq, sl::queries::algorithms::DistanceType::Furthest);
 }
 

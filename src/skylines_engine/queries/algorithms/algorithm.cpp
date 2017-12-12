@@ -45,20 +45,24 @@ namespace sl { namespace queries { namespace algorithms {
 
     void Algorithm::ComputeTopK(const std::vector<data::WeightedPoint> &all_skylines, NonConstData<data::WeightedPoint> *output) {
 
-        std::set<PointStatistics> points;
-        float max_distance_in_set = std::numeric_limits<float>::max();
-        for (const data::WeightedPoint &skyline : all_skylines) {
-            std::pair<float, float> min_max_distance = ComputeSkylineStatistics(skyline);
-            if (points.size() < top_k_ || min_max_distance.second < max_distance_in_set) {
-                points.insert(PointStatistics(skyline, min_max_distance));
-                if(points.size() > top_k_)
-                    points.erase(points.begin());
-                max_distance_in_set = points.begin()->s_.second;
+        if (all_skylines.size() <= top_k_) {
+            output->Points().assign(all_skylines.begin(), all_skylines.end());
+        } else {
+            std::set<PointStatistics> points;
+            float max_distance_in_set = std::numeric_limits<float>::max();
+            for (const data::WeightedPoint &skyline : all_skylines) {
+                std::pair<float, float> min_max_distance = ComputeSkylineStatistics(skyline);
+                if (points.size() < top_k_ || min_max_distance.second < max_distance_in_set) {
+                    points.insert(PointStatistics(skyline, min_max_distance));
+                    if (points.size() > top_k_)
+                        points.erase(points.begin());
+                    max_distance_in_set = points.begin()->s_.second;
+                }
             }
-        }
 
-        for (const PointStatistics &ps : points) {
-            output->Add(ps.wp_);
+            for (const PointStatistics &ps : points) {
+                output->Add(ps.wp_);
+            }
         }
     }
 }}}

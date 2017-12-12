@@ -1,16 +1,16 @@
-#ifndef SKYLINES_QUERIES_ALGORITHMS_MULTI_THREAD_BRUTE_FORCE_DISCARDING_HPP
-#define SKYLINES_QUERIES_ALGORITHMS_MULTI_THREAD_BRUTE_FORCE_DISCARDING_HPP
+#ifndef SKYLINES_QUERIES_ALGORITHMS_MULTI_THREAD_BRUTE_FORCE_HPP
+#define SKYLINES_QUERIES_ALGORITHMS_MULTI_THREAD_BRUTE_FORCE_HPP
 
 #include <mutex>
 
 #include "queries/algorithms/algorithm.hpp"
 
 namespace sl { namespace queries { namespace algorithms {
-    class MultiThreadBruteForceDiscarding : public Algorithm {
+    class MultiThreadBruteForce : public Algorithm {
     public:
-        MultiThreadBruteForceDiscarding(
+        MultiThreadBruteForce(
             const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q) :
-            Algorithm("MultiThreadBruteForceDiscarting", input_p, input_q) {
+            Algorithm("MultiThreadBruteForce", input_p, input_q) {
         }
 
     protected:
@@ -25,7 +25,7 @@ namespace sl { namespace queries { namespace algorithms {
         data::Statistics ComputeSkylines(Comparator comparator_function, std::vector<data::WeightedPoint> *skylines);
 
         template<class Comparator>
-        data::Statistics ComputeSingleThreadBruteForceDiscarding(
+        data::Statistics ComputeSingleThreadBruteForce(
             std::vector<data::WeightedPoint>::const_iterator first_skyline_candidate,
             std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate,
             Comparator comparator_function,

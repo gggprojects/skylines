@@ -24,21 +24,6 @@ namespace sl { namespace queries { namespace algorithms {
 
         virtual data::Statistics Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) = 0;
 
-        //template<class Comparator>
-        //inline bool static IsDominated(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q,
-        //    Comparator comparator_function, data::PointStatistics *statistics) {
-        //    return IsDominated_impl(a, b, q.data(), static_cast<int>(q.size()), comparator_function, statistics);
-        //}
-
-        //template<class Comparator>
-        //inline int static Dominator(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q,
-        //    Comparator comparator_function,
-        //    data::PointStatistics *a_statistics,
-        //    data::PointStatistics *b_statistics) {
-        //    return Dominator_impl(a, b, q.data(), static_cast<int>(q.size()), comparator_function,
-        //        a_statistics, b_statistics);
-        //}
-
         void SetTopK(size_t top_k) {
             top_k_ = top_k;
         }

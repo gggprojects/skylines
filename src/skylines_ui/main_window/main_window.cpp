@@ -21,7 +21,7 @@ namespace sl { namespace ui { namespace main_window {
         error::ErrorHandler("ui", "info"),
         QMainWindow(parent),
         ui_(new Ui::MainWindow),
-        distance_type_(queries::algorithms::DistanceType::Neartest) {
+        distance_type_(queries::algorithms::DistanceType::Nearest) {
         weighted_query_ptr_ = std::make_shared<sl::queries::WeightedQuery>();
         ui_->setupUi(this);
         ogl_ = new ogl::OGLWidget(weighted_query_ptr_, this);
@@ -101,7 +101,9 @@ namespace sl { namespace ui { namespace main_window {
         sl::queries::data::UniformRealRandomGenerator rrg_y(min_y, max_y);
         sl::queries::data::UniformIntRandomGenerator irg(min_weight, max_weight);
 
-        weighted_query_ptr_->InitRandomP(static_cast<size_t>(ui_->spinBox_P->value()), rrg_x, rrg_y, irg);
+        size_t p_size = static_cast<size_t>(ui_->spinBox_P->value());
+        weighted_query_ptr_->InitRandomP(p_size, rrg_x, rrg_y, irg);
+        weighted_query_ptr_->SetTopK(p_size);
         ogl_->update();
     }
 
@@ -235,6 +237,6 @@ namespace sl { namespace ui { namespace main_window {
     }
 
     void MainWindow::DistanceTypeChanged(bool checked) {
-        distance_type_ = checked ? queries::algorithms::DistanceType::Neartest : queries::algorithms::DistanceType::Furthest;
+        distance_type_ = checked ? queries::algorithms::DistanceType::Nearest : queries::algorithms::DistanceType::Furthest;
     }
 }}}

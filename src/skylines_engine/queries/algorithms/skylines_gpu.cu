@@ -54,11 +54,11 @@ __device__ void _ComputePartialSkyline(
         if (is_skyline) {
             for (int i = 0; i < SHARED_MEM_ELEMENTS; i++) {
                 if (current_input_p_pos + i != global_pos && current_input_p_pos + i < input_p_size) { // do not check against the same point
+                    thread_statistics.num_comparisions_++;
                     if (sl::queries::algorithms::IsDominated(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, comparator_function)) {
                         is_skyline = false;
                         break;
                     }
-                    thread_statistics.num_comparisions_++;
                 }
             }
         }
@@ -90,7 +90,7 @@ __global__ void ComputePartialSkyline(
     float *result) {
 
     switch (distance_type) {
-        case sl::queries::algorithms::DistanceType::Neartest:
+        case sl::queries::algorithms::DistanceType::Nearest:
             _ComputePartialSkyline(input_p, input_p_size, input_q_size, NeartestFunc, statistics, result);
             break;
         case sl::queries::algorithms::DistanceType::Furthest:
@@ -185,6 +185,8 @@ extern "C" void ComputeGPUSkyline(
     for (const sl::queries::algorithms::PointStatistics &ps : points) {
         output->emplace_back(ps.wp_);
     }
+
+    stadistics_results->output_size_ = output->size();
 }
 
 

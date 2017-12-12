@@ -5,18 +5,14 @@
 #include "queries/data/data_structures.hpp"
 
 namespace sl { namespace queries { namespace data {
-    struct __align__(8) Statistics {
+    struct __align__(16) Statistics {
 
         __host__ __device__ Statistics() :
-            num_comparisions_(0) {
-        }
-
-        Statistics operator+=(const Statistics &other) {
-            num_comparisions_ += other.num_comparisions_;
-            return *this;
+            num_comparisions_(0), output_size_(0) {
         }
 
         size_t num_comparisions_;
+        size_t output_size_;
     };
 }}}
 

@@ -17,12 +17,15 @@ namespace sl { namespace queries { namespace algorithms {
         const sl::queries::data::Point *input_q = input_q_.GetPoints().data();
         const int q_size = static_cast<int>(input_q_.GetPoints().size());
 
-        for (skyline_candidate = input_p_.GetPoints().cbegin();
-            skyline_candidate != input_p_.GetPoints().cend();
+        std::vector<data::WeightedPoint>::const_iterator first_element = input_p_.GetPoints().cbegin();
+        std::vector<data::WeightedPoint>::const_iterator last_element = input_p_.GetPoints().cend();
+
+        for (skyline_candidate = first_element;
+            skyline_candidate != last_element;
             ++skyline_candidate) {
-            std::vector<data::WeightedPoint>::const_iterator dominator_candidate = input_p_.GetPoints().cbegin();
+            std::vector<data::WeightedPoint>::const_iterator dominator_candidate = first_element;
             bool is_skyline = true;
-            while (is_skyline && dominator_candidate != input_p_.GetPoints().cend()) {
+            while (is_skyline && dominator_candidate != last_element) {
                 if (skyline_candidate != dominator_candidate) {
                     if (IsDominated(*skyline_candidate, *dominator_candidate, input_q, q_size, comparator_function)) {
                         is_skyline = false;
@@ -36,6 +39,7 @@ namespace sl { namespace queries { namespace algorithms {
                 skylines->emplace_back(*skyline_candidate);
             }
         }
+
         return stats_results;
     }
 
@@ -44,6 +48,7 @@ namespace sl { namespace queries { namespace algorithms {
         std::vector<data::WeightedPoint> skylines;
         data::Statistics stats_results = ComputeSkylines(comparator_function, &skylines);
         ComputeTopK(skylines, output);
+        stats_results.output_size_ = output->GetPoints().size();
         return stats_results;
     }
 
@@ -75,7 +80,7 @@ namespace sl { namespace queries { namespace algorithms {
     data::Statistics SingleThreadBruteForce::Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
         //std::cout << "Computing STBF\n";
         switch (distance_type) {
-            case sl::queries::algorithms::DistanceType::Neartest:
+            case sl::queries::algorithms::DistanceType::Nearest:
                 return _Compute([](const float a, const float b) -> bool { return a <= b; }, output);
                 break;
             case sl::queries::algorithms::DistanceType::Furthest:

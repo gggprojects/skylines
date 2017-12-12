@@ -36,10 +36,6 @@ namespace sl { namespace queries { namespace data {
             return x_ == other.x_ && y_ == other.y_;
         }
 
-        __host__ __device__ inline float Distance(const Point &other) const {
-            return std::sqrtf(SquaredDistance(other));
-        }
-
         __host__ __device__ inline float SquaredDistance(const Point &other) const {
             return (x_ - other.x_) * (x_ - other.x_) + (y_ - other.y_) * (y_ - other.y_);
             //fast-math in CUDA computes __powf(x,y) as __exp2f(y * __log2f(x))
@@ -60,7 +56,7 @@ namespace sl { namespace queries { namespace data {
         WeightedPoint(
             data::UniformRealRandomGenerator &rrg_x,
             data::UniformRealRandomGenerator &rrg_y,
-            data::UniformIntRandomGenerator &irg) : WeightedPoint(Point(rrg_x, rrg_y), irg.Next() % 11) {
+            data::UniformIntRandomGenerator &irg) : WeightedPoint(Point(rrg_x, rrg_y), irg.Next()) {
         }
 
         WeightedPoint(const Point &point, int weight) :
@@ -79,10 +75,6 @@ namespace sl { namespace queries { namespace data {
 
         bool operator!=(const WeightedPoint &other) const {
             return !(*this == other);
-        }
-
-        __host__ __device__ inline float Distance(const Point &other) const {
-            return point_.Distance(other) * weight_;
         }
 
         __host__ __device__ inline float SquaredDistance(const Point &other) const {

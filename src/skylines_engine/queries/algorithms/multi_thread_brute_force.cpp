@@ -1,16 +1,16 @@
 #include <sstream>
 #include <iostream>
 
-#include "queries/algorithms/multi_thread_brute_force_discarding.hpp"
+#include "queries/algorithms/multi_thread_brute_force.hpp"
 
 namespace sl { namespace queries { namespace algorithms {
-    data::Statistics MultiThreadBruteForceDiscarding::Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
+    data::Statistics MultiThreadBruteForce::Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
         if (!Init(output)) return data::Statistics();
         return Compute(output, distance_type);
     }
 
     template<class Comparator>
-    data::Statistics MultiThreadBruteForceDiscarding::ComputeSingleThreadBruteForceDiscarding(
+    data::Statistics MultiThreadBruteForce::ComputeSingleThreadBruteForce(
         std::vector<data::WeightedPoint>::const_iterator first_skyline_candidate,
         std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate,
         Comparator comparator_function,
@@ -21,46 +21,32 @@ namespace sl { namespace queries { namespace algorithms {
         const sl::queries::data::Point *input_q = input_q_.GetPoints().data();
         const int q_size = static_cast<int>(input_q_.GetPoints().size());
 
-        std::vector<data::WeightedPoint>::const_iterator first_p_element = input_p_.GetPoints().cbegin();
-        std::vector<data::WeightedPoint>::const_iterator last_p_element = input_p_.GetPoints().cend();
-
-        std::vector<bool> needs_to_be_checked(input_p_.GetPoints().size(), true);
-        std::vector<bool>::iterator skyline_candidate_needs_to_be_checked = needs_to_be_checked.begin() + std::distance(first_p_element, first_skyline_candidate);
-
         size_t i = 0;
         for (std::vector<data::WeightedPoint>::const_iterator skyline_candidate = first_skyline_candidate;
             skyline_candidate != last_skyline_candidate;
-            ++skyline_candidate, ++skyline_candidate_needs_to_be_checked) {
-            if (*skyline_candidate_needs_to_be_checked) {
-                std::vector<bool>::iterator dominator_candidate_needs_to_be_checked = needs_to_be_checked.begin();
-                std::vector<data::WeightedPoint>::const_iterator dominator_candidate = skyline_candidate + 1;
-                bool is_skyline = true;
-                while (is_skyline && dominator_candidate != last_p_element) {
-                    if (skyline_candidate != dominator_candidate && *dominator_candidate_needs_to_be_checked) {
-                        int dominator = Dominator(*skyline_candidate, *dominator_candidate, input_q, q_size, comparator_function);
-                        if (dominator == 1) {
-                            is_skyline = false;
-                        } else if (dominator == 0) {
-                            *dominator_candidate_needs_to_be_checked = false;
-                        }
-                        stats_results.num_comparisions_++;
+            ++skyline_candidate) {
+            std::vector<data::WeightedPoint>::const_iterator dominator_candidate = input_p_.GetPoints().cbegin();
+            bool is_skyline = true;
+            while (is_skyline && dominator_candidate != input_p_.GetPoints().cend()) {
+                if (skyline_candidate != dominator_candidate) {
+                    if (IsDominated(*skyline_candidate, *dominator_candidate, input_q, q_size, comparator_function)) {
+                        is_skyline = false;
                     }
-                    ++dominator_candidate;
-                    ++dominator_candidate_needs_to_be_checked;
+                    stats_results.num_comparisions_++;
                 }
+                ++dominator_candidate;
+            }
 
-                if (is_skyline) {
-                    std::lock_guard<std::mutex> lock_(output_mutex_);
-                    skylines->emplace_back(*skyline_candidate);
-                }
+            if (is_skyline) {
+                std::lock_guard<std::mutex> lock_(output_mutex_);
+                skylines->emplace_back(*skyline_candidate);
             }
         }
-
         return stats_results;
     }
 
     template<class Comparator>
-    data::Statistics MultiThreadBruteForceDiscarding::ComputeSkylines(Comparator comparator_function, std::vector<data::WeightedPoint> *skylines) {
+    data::Statistics MultiThreadBruteForce::ComputeSkylines(Comparator comparator_function, std::vector<data::WeightedPoint> *skylines) {
 
         unsigned int concurent_threads_supported = std::thread::hardware_concurrency();
         size_t num_elements_p = input_p_.GetPoints().size();
@@ -79,7 +65,7 @@ namespace sl { namespace queries { namespace algorithms {
                 std::thread([this, &chunk, i, comparator_function, &stats_mutex, &stats_results, skylines] {
                 std::vector<data::WeightedPoint>::const_iterator first_skyline_candidate = input_p_.GetPoints().cbegin() + (i * chunk);
                 std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate = input_p_.GetPoints().cbegin() + ((i + 1) * chunk);
-                data::Statistics partial_stats = ComputeSingleThreadBruteForceDiscarding(first_skyline_candidate, last_skyline_candidate, comparator_function, skylines);
+                data::Statistics partial_stats = ComputeSingleThreadBruteForce(first_skyline_candidate, last_skyline_candidate, comparator_function, skylines);
 
                 std::lock_guard<std::mutex> lock(stats_mutex);
                 stats_results.num_comparisions_ += partial_stats.num_comparisions_;
@@ -93,7 +79,7 @@ namespace sl { namespace queries { namespace algorithms {
                 std::thread([this, &chunk, &concurent_threads_supported, comparator_function, &stats_mutex, &stats_results, skylines] {
                 std::vector<data::WeightedPoint>::const_iterator first_skyline_candidate = input_p_.GetPoints().cbegin() + (concurent_threads_supported * chunk);
                 std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate = input_p_.GetPoints().end();
-                data::Statistics partial_stats = ComputeSingleThreadBruteForceDiscarding(first_skyline_candidate, last_skyline_candidate, comparator_function, skylines);
+                data::Statistics partial_stats = ComputeSingleThreadBruteForce(first_skyline_candidate, last_skyline_candidate, comparator_function, skylines);
 
                 std::lock_guard<std::mutex> lock(stats_mutex);
                 stats_results.num_comparisions_ += partial_stats.num_comparisions_;
@@ -108,7 +94,7 @@ namespace sl { namespace queries { namespace algorithms {
     }
 
     template<class Comparator>
-    data::Statistics MultiThreadBruteForceDiscarding::_Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output) {
+    data::Statistics MultiThreadBruteForce::_Compute(Comparator comparator_function, NonConstData<data::WeightedPoint> *output) {
         std::vector<data::WeightedPoint> skylines;
         data::Statistics stats_results = ComputeSkylines(comparator_function, &skylines);
         ComputeTopK(skylines, output);
@@ -116,8 +102,8 @@ namespace sl { namespace queries { namespace algorithms {
         return stats_results;
     }
 
-    data::Statistics MultiThreadBruteForceDiscarding::Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
-        //std::cout << "Computing MTBFD\n";
+    data::Statistics MultiThreadBruteForce::Compute(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) {
+        //std::cout << "Computing MTBF\n";
         switch (distance_type) {
             case sl::queries::algorithms::DistanceType::Nearest:
                 return _Compute(

@@ -5,7 +5,7 @@
 
 #define fw(what) std::forward<decltype(what)>(what)
 
-namespace bachelor { namespace time {
+namespace sl { namespace time {
     /*
     * class to measure the execution time of a callable
     */
