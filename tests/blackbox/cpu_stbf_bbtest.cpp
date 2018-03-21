@@ -7,7 +7,7 @@
 
 #include "queries/weighted.hpp"
 #include "export_import.hpp"
-#include "time_utils.hpp"
+#include "common/time.hpp"
 
 struct InputParameters {
     size_t num_points_p_;
@@ -38,6 +38,7 @@ public:
         wq.SetTopK(input_parameters_.top_k_);
         wq.InitRandom(input_parameters_.num_points_p_, input_parameters_.num_points_q_, rrg_x, rrg_y, irg);
         //wq.ToFile("test.json");
+        //wq.FromFile("test.json");
     }
 
     virtual void TearDown() {
@@ -113,8 +114,11 @@ void RunAll(sl::queries::WeightedQuery &wq, sl::queries::algorithms::DistanceTyp
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> stbfd_output;
     RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, &stbfd_output, stbf_output, distance_type);
 
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> mtbf_output;
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, &mtbf_output, stbf_output, distance_type);
+
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> mtbfd_output;
-    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, &mtbfd_output, stbfd_output, distance_type);
+    RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARTING, &mtbfd_output, stbf_output, distance_type);
 
     sl::queries::NonConstData<sl::queries::data::WeightedPoint> sts_output;
     RunAlgorithmAndCompareWithPrevious(wq, sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, &sts_output, stbf_output, distance_type);

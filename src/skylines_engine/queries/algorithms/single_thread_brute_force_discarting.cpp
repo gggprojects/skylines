@@ -38,7 +38,9 @@ namespace sl { namespace queries { namespace algorithms {
                             *dominator_candidate_needs_to_be_checked = false;
                         }
                     } else {
-
+                        if (IsDominated(*skyline_candidate, *dominator_candidate, input_q, q_size, comparator_function)) {
+                            is_skyline = false;
+                        }
                     }
                     stats_results.num_comparisions_++;
                     ++dominator_candidate;

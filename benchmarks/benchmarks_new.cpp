@@ -105,8 +105,8 @@ ExperimentStadistics Execute(
 void LoadData(size_t input_p_size, size_t input_q_size) {
     data::UniformRealRandomGenerator rrg_x(0., 1.);
     data::UniformRealRandomGenerator rrg_y(0., 1.);
-    data::UniformIntRandomGenerator irg(10, 10);
-    //data::UniformIntRandomGenerator irg(1, 10);
+    data::UniformIntRandomGenerator irg(1, 1); // big output
+    //data::UniformIntRandomGenerator irg(1, 10); // small output
     wq.InitRandom(input_p_size, input_q_size, rrg_x, rrg_y, irg);
 }
 

@@ -29,7 +29,8 @@ namespace sl { namespace queries { namespace algorithms {
             std::vector<data::WeightedPoint>::const_iterator first_skyline_candidate,
             std::vector<data::WeightedPoint>::const_iterator last_skyline_candidate,
             Comparator comparator_function,
-            std::vector<data::WeightedPoint> *skylines);
+            std::mutex &are_skylines_mutex,
+            std::vector<bool>::iterator is_skyline);
     private:
         std::mutex output_mutex_;
     };
