@@ -8,25 +8,11 @@
 #include "queries/data/data_structures.hpp"
 #include "queries/algorithms/algorithm.cuh"
 #include "queries/algorithms/distance_type.hpp"
+#include "queries/algorithms/gpu_common.cuh"
 
 #define SHARED_MEM_ELEMENTS 1024
 
-/*
-Total amount of constant memory:    65536 bytes
-sizeof(sl::queries::data::Point):   8 bytes
-Max elements:                       65536 / 8 = 8192
-*/
-#define MAX_CONST_MEM_ELEMENTS 8192
-
 __constant__ sl::queries::data::Point device_input_q[MAX_CONST_MEM_ELEMENTS];
-
-__device__ inline bool NeartestFunc(const float a, const float b) {
-    return a <= b;
-}
-
-__device__ inline bool FurthestFunc(const float a, const float b) {
-    return a >= b;
-}
 
 template<class Comparator>
 __device__ void _ComputePartialSkyline(
@@ -74,7 +60,8 @@ __device__ void _ComputePartialSkyline(
             }
         }
         result[global_pos] = max_distance;
-    } else {
+    }
+    else {
         result[global_pos] = -1;
     }
 
@@ -82,7 +69,7 @@ __device__ void _ComputePartialSkyline(
 }
 
 __global__ void ComputePartialSkyline(
-    const sl::queries::data::WeightedPoint *input_p, 
+    const sl::queries::data::WeightedPoint *input_p,
     size_t input_p_size,
     int input_q_size,
     sl::queries::algorithms::DistanceType distance_type,
@@ -90,39 +77,15 @@ __global__ void ComputePartialSkyline(
     float *result) {
 
     switch (distance_type) {
-        case sl::queries::algorithms::DistanceType::Nearest:
-            _ComputePartialSkyline(input_p, input_p_size, input_q_size, NeartestFunc, statistics, result);
-            break;
-        case sl::queries::algorithms::DistanceType::Furthest:
-            _ComputePartialSkyline(input_p, input_p_size, input_q_size, FurthestFunc, statistics, result);
-            break;
-        default:
-            break;
+    case sl::queries::algorithms::DistanceType::Nearest:
+        _ComputePartialSkyline(input_p, input_p_size, input_q_size, NearestFunc, statistics, result);
+        break;
+    case sl::queries::algorithms::DistanceType::Furthest:
+        _ComputePartialSkyline(input_p, input_p_size, input_q_size, FurthestFunc, statistics, result);
+        break;
+    default:
+        break;
     }
-}
-
-template<typename T>
-T inline divUp(T a, T b) {
-    return (a + b - 1) / b;
-}
-
-template<typename T>
-T roundUp(T numToRound, T multiple)
-{
-    if (multiple == 0)
-        return numToRound;
-
-    T remainder = numToRound % multiple;
-    if (remainder == 0)
-        return numToRound;
-
-    return numToRound + multiple - remainder;
-}
-
-extern "C" bool CheckInputCorrectness(const std::vector<sl::queries::data::WeightedPoint> &input_p,
-    const std::vector<sl::queries::data::Point> &input_q) {
-    if (input_q.size() > MAX_CONST_MEM_ELEMENTS) return false;
-    return true;
 }
 
 extern "C" void ComputeGPUSkyline(
@@ -147,7 +110,7 @@ extern "C" void ComputeGPUSkyline(
     sl::gpu::GPUMemory<sl::queries::data::WeightedPoint> input_p_d(input_p_size_SHARED_MEM_SIZE_multiple);
     input_p_d.UploadToDeviceAsync(input_p, gpu_stream); //the final values maybe empty
 
-    //copy statistics
+                                                        //copy statistics
     sl::gpu::GPUMemory<sl::queries::data::Statistics> statistics_d(1);
     statistics_d.UploadToDeviceAsync(stadistics_results, 1, gpu_stream);
 
@@ -160,12 +123,19 @@ extern "C" void ComputeGPUSkyline(
     int total_numBlocks = static_cast<int>(divUp(input_p_size, static_cast<size_t>(threadsPerBlock.x * threadsPerBlock.y)));
     dim3 grid(total_numBlocks, 1);
 
-    ComputePartialSkyline<<< grid, threadsPerBlock, 0, gpu_stream() >>> (input_p_d(), input_p_size, input_q_size, distance_type, statistics_d(), result_d());
+    ComputePartialSkyline<<<grid, threadsPerBlock, 0, gpu_stream()>>>(input_p_d(), input_p_size, input_q_size, distance_type, statistics_d(), result_d());
+    cudaError_t e = cudaGetLastError();
+    if (e != cudaSuccess) {
+        std::cout << cudaGetErrorString(e) << '\n';
+    }
     std::vector<float> result(input_p_size);
     result_d.DownloadToHostAsync(result.data(), input_p_size, gpu_stream);
     statistics_d.DownloadToHostAsync(stadistics_results, gpu_stream);
 
-    gpu_stream.Syncronize();
+    e = gpu_stream.Syncronize();
+    if (e != cudaSuccess) {
+        std::cout << cudaGetErrorString(e) << '\n';
+    }
 
     std::set<sl::queries::algorithms::PointStatistics> points;
     float max_distance_in_set = 99999;
@@ -188,6 +158,8 @@ extern "C" void ComputeGPUSkyline(
 
     stadistics_results->output_size_ = output->size();
 }
+
+
 
 
 

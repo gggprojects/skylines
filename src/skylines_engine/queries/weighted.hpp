@@ -4,13 +4,16 @@
 #include "export_import.hpp"
 #include "common/skyline_element.hpp"
 #include "common/irenderable.hpp"
+#include "gpu/gpu_devices.hpp"
 #include "queries/data_capable.hpp"
 #include "queries/algorithms/single_thread_brute_force.hpp"
 #include "queries/algorithms/single_thread_brute_force_discarting.hpp"
 #include "queries/algorithms/single_thread_sorting.hpp"
 #include "queries/algorithms/multi_thread_brute_force.hpp"
 #include "queries/algorithms/multi_thread_brute_force_discarding.hpp"
+#include "queries/algorithms/multi_thread_sorting.hpp"
 #include "queries/algorithms/gpu_brute_force.hpp"
+#include "queries/algorithms/gpu_brute_force_discarting.hpp"
 
 namespace sl { namespace queries {
     class skylines_engine_DLL_EXPORTS WeightedQuery :
@@ -24,10 +27,12 @@ namespace sl { namespace queries {
             SINGLE_THREAD_SORTING = 2,
             MULTI_THREAD_BRUTE_FORCE = 3,
             MULTI_THREAD_BRUTE_FORCE_DISCARDING = 4,
-            GPU_BRUTE_FORCE = 5
+            MULTI_THREAD_SORTING = 5,
+            GPU_BRUTE_FORCE = 6,
+            GPU_BRUTE_FORCE_DISCARTING = 7
         };
 
-        WeightedQuery();
+        WeightedQuery(unsigned int gpu_id = 0);
 
         data::Statistics RunAlgorithm(AlgorithmType type, algorithms::DistanceType distance_type);
 
@@ -48,6 +53,7 @@ namespace sl { namespace queries {
 
         void SetTopK(size_t top_k);
     private:
+        gpu::GPUDevices gpu_devices;
         std::vector<std::shared_ptr<algorithms::Algorithm>> algorithms_;
     };
 }}

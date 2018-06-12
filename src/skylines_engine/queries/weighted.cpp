@@ -1,20 +1,21 @@
 
 #include "queries/weighted.hpp"
-
+#include "gpu/gpu_devices.hpp"
 #pragma warning(push, 0)
 #include <freeglut/GL/freeglut.h>
 #pragma warning(pop)
 
 namespace sl { namespace queries {
-    WeightedQuery::WeightedQuery() :
-        SkylineElement("WeightedQuery", "info"), algorithms_(6) {
-
+    WeightedQuery::WeightedQuery(unsigned int gpu_id) :
+        SkylineElement("WeightedQuery", "info"), algorithms_(8) {
         algorithms_[AlgorithmType::SINGLE_THREAD_BRUTE_FORCE] = std::make_shared<algorithms::SingleThreadBruteForce>(input_p_, input_q_);
         algorithms_[AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING] = std::make_shared<algorithms::SingleThreadBruteForceDiscarting>(input_p_, input_q_);
         algorithms_[AlgorithmType::SINGLE_THREAD_SORTING] = std::make_shared<algorithms::SingleThreadSorting>(input_p_, input_q_);
         algorithms_[AlgorithmType::MULTI_THREAD_BRUTE_FORCE] = std::make_shared<algorithms::MultiThreadBruteForce>(input_p_, input_q_);
         algorithms_[AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING] = std::make_shared<algorithms::MultiThreadBruteForceDiscarding>(input_p_, input_q_);
+        algorithms_[AlgorithmType::MULTI_THREAD_SORTING] = std::make_shared<algorithms::MultiThreadSorting>(input_p_, input_q_);
         algorithms_[AlgorithmType::GPU_BRUTE_FORCE] = std::make_shared<algorithms::GPUBruteForce>(input_p_, input_q_);
+        algorithms_[AlgorithmType::GPU_BRUTE_FORCE_DISCARTING] = std::make_shared<algorithms::GPUBruteForceDiscarting>(input_p_, input_q_);
     }
 
     void WeightedQuery::InitRandomP(size_t num_points_p,

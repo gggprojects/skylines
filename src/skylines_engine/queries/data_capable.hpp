@@ -38,6 +38,7 @@ namespace sl { namespace queries {
         const Data<data::WeightedPoint> & GetInputP() const { return input_p_; }
         const Data<data::Point> & GetInputQ() const { return input_q_; }
         const NonConstData<data::WeightedPoint> & GetOuput() const { return output_; }
+        NonConstData<data::WeightedPoint> GetOuputCopy() const { return output_; }
         const std::string& GetFileNameLoaded() const { return filename_loaded_; }
 
     private:

@@ -66,7 +66,9 @@ std::string GetAlgorithmTypeString(WeightedQuery::AlgorithmType algorithm_type, 
         case WeightedQuery::MULTI_THREAD_BRUTE_FORCE: return is_top_k ? "MTBF-TopK" : "MTBF";
         case WeightedQuery::MULTI_THREAD_BRUTE_FORCE_DISCARDING: return is_top_k ? "MTBFD-TopK" : "MTBFD";
         case WeightedQuery::SINGLE_THREAD_SORTING: return is_top_k ? "STS-TopK" : "STS";
+        case WeightedQuery::MULTI_THREAD_SORTING: return is_top_k ? "MTS-TopK" : "MTS";
         case WeightedQuery::GPU_BRUTE_FORCE: return is_top_k ? "GPUBF-TopK" : "GPUBF";
+        case WeightedQuery::GPU_BRUTE_FORCE_DISCARTING: return is_top_k ? "GPUBFD-TopK" : "GPUBFD";
         default: return "";
     }
 }
@@ -87,6 +89,7 @@ ExperimentStadistics Execute(
     algorithms::DistanceType distance_type) {
 
     int ITERATIONS = ChooseIterations(wq.GetInputP().GetPoints().size());
+
     ExperimentStadistics min_es;
     for (int i = 0; i < ITERATIONS; i++) {
         ExperimentStadistics current_es;
@@ -105,8 +108,8 @@ ExperimentStadistics Execute(
 void LoadData(size_t input_p_size, size_t input_q_size) {
     data::UniformRealRandomGenerator rrg_x(0., 1.);
     data::UniformRealRandomGenerator rrg_y(0., 1.);
-    data::UniformIntRandomGenerator irg(1, 1); // big output
-    //data::UniformIntRandomGenerator irg(1, 10); // small output
+    //data::UniformIntRandomGenerator irg(1, 1); // big output
+    data::UniformIntRandomGenerator irg(1, 10); // small output
     wq.InitRandom(input_p_size, input_q_size, rrg_x, rrg_y, irg);
 }
 
@@ -123,6 +126,40 @@ void Compare(const Experiment &baseline_experiment, const Experiment &b, const s
     std::cout << '\t' << GetAlgorithmTypeString(b.algorithm_type_, top_k != b.input_p_size_) << '\t' << improvement << "\tTime Taken: " << experiment_statistics.time_taken_ << "(ms)\tComparisons: " << experiment_statistics.stats_.num_comparisions_ << "\tOutputsize: " << experiment_statistics.stats_.output_size_ << '\n';
 }
 
+bool CheckOuput(sl::queries::NonConstData<sl::queries::data::WeightedPoint> &a, sl::queries::NonConstData<sl::queries::data::WeightedPoint> &b, int line) { // we pass a copy
+    auto sorting_function = [](const sl::queries::data::WeightedPoint &a, const sl::queries::data::WeightedPoint &b) -> bool {
+        if (a.point_.x_ == b.point_.x_) return a.point_.y_ < b.point_.y_;
+        else return a.point_.x_ < b.point_.x_;
+    };
+
+    std::sort(a.Points().begin(), a.Points().end(), sorting_function);
+    std::sort(b.Points().begin(), b.Points().end(), sorting_function);
+
+    if (a.Points().size() != b.Points().size()) {
+        std::cerr << "points are different at line: "<< line;
+        return false;
+    }
+    bool equal = std::equal(a.Points().begin(), a.Points().end(), b.Points().begin());
+    if (!equal) {
+        std::cerr << "points are different at line: " << line;
+    }
+
+    return equal;
+}
+
+void RunExperiment(
+    size_t input_p_size, size_t input_q_size, std::map<Experiment, ExperimentStadistics> *experiments, algorithms::DistanceType distance_type, size_t top_k,
+    const Experiment &stbf,
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> &output_baseline,
+    WeightedQuery::AlgorithmType algo, int line) {
+    Experiment new_experiment(algo, distance_type, input_p_size, input_q_size, top_k);
+    experiments->insert(std::make_pair(new_experiment, Execute(algo, distance_type)));
+    Compare(stbf, new_experiment, *experiments, top_k);
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> new_ouput = wq.GetOuputCopy();
+    CheckOuput(output_baseline, new_ouput, line);
+    wq.ClearOutput();
+}
+
 void RunExperiments(size_t input_p_size, size_t input_q_size, std::map<Experiment, ExperimentStadistics> *experiments, algorithms::DistanceType distance_type, size_t top_k) {
     SetConsoleTextAttribute(hConsole, 7);
     std::cout << '\n' << GetAlgorithmTypeString(distance_type) << '\n';
@@ -135,26 +172,17 @@ void RunExperiments(size_t input_p_size, size_t input_q_size, std::map<Experimen
     experiments->insert(std::make_pair(stbf, Execute(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type)));
     const ExperimentStadistics &experiment_statistics = experiments->find(stbf)->second;
     std::cout << std::fixed << std::setprecision(3) << '\t' << GetAlgorithmTypeString(stbf.algorithm_type_, top_k != stbf.input_p_size_) << "\t1x\tTime Taken: " << experiment_statistics.time_taken_ << "(ms)\tComparisons: " << experiment_statistics.stats_.num_comparisions_ << "\tOutputsize: " << experiment_statistics.stats_.output_size_ << '\n';
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> output_baseline = wq.GetOuputCopy();
+    sl::queries::NonConstData<sl::queries::data::WeightedPoint> new_ouput;
 
-    Experiment stbfd(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type, input_p_size, input_q_size, top_k);
-    experiments->insert(std::make_pair(stbfd, Execute(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type)));
-    Compare(stbf, stbfd, *experiments, top_k);
+    RunExperiment(input_p_size, input_q_size, experiments, distance_type, top_k, stbf, output_baseline, WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, __LINE__);
+    RunExperiment(input_p_size, input_q_size, experiments, distance_type, top_k, stbf, output_baseline, WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, __LINE__);
+    RunExperiment(input_p_size, input_q_size, experiments, distance_type, top_k, stbf, output_baseline, WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, __LINE__);
+    RunExperiment(input_p_size, input_q_size, experiments, distance_type, top_k, stbf, output_baseline, WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, __LINE__);
+    RunExperiment(input_p_size, input_q_size, experiments, distance_type, top_k, stbf, output_baseline, WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, __LINE__);
+    RunExperiment(input_p_size, input_q_size, experiments, distance_type, top_k, stbf, output_baseline, WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, __LINE__);
+    RunExperiment(input_p_size, input_q_size, experiments, distance_type, top_k, stbf, output_baseline, WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE_DISCARTING, __LINE__);
 
-    Experiment mtbf(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type, input_p_size, input_q_size, top_k);
-    experiments->insert(std::make_pair(mtbf, Execute(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type)));
-    Compare(stbf, mtbf, *experiments, top_k);
-
-    Experiment mtbfd(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type, input_p_size, input_q_size, top_k);
-    experiments->insert(std::make_pair(mtbfd, Execute(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type)));
-    Compare(stbf, mtbfd, *experiments, top_k);
-
-    Experiment sts(WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type, input_p_size, input_q_size, top_k);
-    experiments->insert(std::make_pair(sts, Execute(WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type)));
-    Compare(stbf, sts, *experiments, top_k);
-
-    Experiment gpubf(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type, input_p_size, input_q_size, top_k);
-    experiments->insert(std::make_pair(gpubf, Execute(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type)));
-    Compare(stbf, gpubf, *experiments, top_k);
     SetConsoleTextAttribute(hConsole, 7);
 }
 
@@ -175,29 +203,22 @@ void writeToCSV(
         algorithms::DistanceType distance_type = algorithms::DistanceType::Nearest;
         std::ofstream file("nearest-" + filename + ".csv");
         std::ofstream file_top_k("nearest-" + filename + "-top-k.csv");
-        file << "Input size,Single thread,Discarting,Multi thread,Multi thread discarding,Sorting,GPU\n";
-        file_top_k << "Input size,Single thread,Discarting,Multi thread,Multi thread discarding,Sorting,GPU\n";
+        file << "Input size,Single thread BF,Single thread BF Discarting,Multi thread BF,Multi thread BF discarding,Single thread sorting,Multi thread sorting,GPU BF,GPU BF Discarting\n";
+        file_top_k << "Input size,Single thread BF,Single thread BF Discarting,Multi thread BF,Multi thread BF discarding,Single thread sorting,Multi thread sorting,GPU BF,GPU BF Discarting\n";
         for (const std::pair<Experiment, ExperimentStadistics> &kvp : experiments) {
             if (kvp.first.algorithm_type_ == WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE && kvp.first.distance_type_ == distance_type) {
-                if (kvp.first.input_p_size_ == kvp.first.top_k_) {
-                    file << kvp.first.input_p_size_ << 'x' << kvp.first.input_q_size_ << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_)));
-                    file << '\n';
-                } else {
-                    file_top_k << kvp.first.input_p_size_ << 'x' << kvp.first.input_q_size_ << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_)));
-                    file_top_k << '\n';
-                }
+
+                std::ofstream &ff = kvp.first.input_p_size_ == kvp.first.top_k_ ? file : file_top_k;
+                ff << kvp.first.input_p_size_ << 'x' << kvp.first.input_q_size_ << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE_DISCARTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_)));
+                ff << '\n';
             }
         }
         file.close();
@@ -207,29 +228,22 @@ void writeToCSV(
         algorithms::DistanceType distance_type = algorithms::DistanceType::Furthest;
         std::ofstream file("furthest-" + filename + ".csv");
         std::ofstream file_top_k("furthest-" + filename + "-top-k.csv");
-        file << "Input size,Single thread,Discarting,Multi thread,Multi thread discarding,Sorting,GPU\n";
-        file_top_k << "Input size,Single thread,Discarting,Multi thread,Multi thread discarding,Sorting,GPU\n";
+        file << "Input size,Single thread BF,Single thread BF Discarting,Multi thread BF,Multi thread BF discarding,Single thread sorting,Multi thread sorting,GPU BF,GPU BF Discarting\n";
+        file_top_k << "Input size,Single thread BF,Single thread BF Discarting,Multi thread BF,Multi thread BF discarding,Single thread sorting,Multi thread sorting,GPU BF,GPU BF Discarting\n";
         for (const std::pair<Experiment, ExperimentStadistics> &kvp : experiments) {
             if (kvp.first.algorithm_type_ == WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE && kvp.first.distance_type_ == distance_type) {
-                if (kvp.first.input_p_size_ == kvp.first.top_k_) {
-                    file << kvp.first.input_p_size_ << 'x' << kvp.first.input_q_size_ << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_)));
-                    file << '\n';
-                } else {
-                    file_top_k << kvp.first.input_p_size_ << 'x' << kvp.first.input_q_size_ << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
-                    file_top_k << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_)));
-                    file_top_k << '\n';
-                }
+
+                std::ofstream &ff = kvp.first.input_p_size_ == kvp.first.top_k_ ? file : file_top_k;
+
+                ff << kvp.first.input_p_size_ << 'x' << kvp.first.input_q_size_ << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
+                ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE_DISCARTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_)));
             }
         }
         file.close();
@@ -269,6 +283,7 @@ int main() {
 
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
+
     std::map<Experiment, ExperimentStadistics> experiments;
 
     RunAllExperiments(2000, 100, &experiments, 10);
@@ -280,9 +295,4 @@ int main() {
     RunAllExperiments(100000, 100, &experiments, 100);
     writeFiles(experiments);
 
-    //RunAllExperiments(100, 100, &experiments, 10);
-    //RunAllExperiments(200, 100, &experiments, 10);
-    //RunAllExperiments(300, 100, &experiments, 10);
-    //RunAllExperiments(400, 100, &experiments, 10);
-    //writeFiles(experiments);
 }

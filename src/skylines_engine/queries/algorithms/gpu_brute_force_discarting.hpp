@@ -1,15 +1,15 @@
-#ifndef SKYLINES_QUERIES_ALGORITHMS_GPU_BRUTE_FORCE_HPP
-#define SKYLINES_QUERIES_ALGORITHMS_GPU_BRUTE_FORCE_HPP
+#ifndef SKYLINES_QUERIES_ALGORITHMS_GPU_BRUTE_FORCE_DISCARTING_HPP
+#define SKYLINES_QUERIES_ALGORITHMS_GPU_BRUTE_FORCE_DISCARTING_HPP
 
 #include "queries/algorithms/algorithm.hpp"
 #include "gpu/gpu_devices.hpp"
 
 namespace sl { namespace queries { namespace algorithms {
-    class GPUBruteForce : public Algorithm {
+    class GPUBruteForceDiscarting : public Algorithm {
     public:
-        GPUBruteForce(
+        GPUBruteForceDiscarting(
             const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q) :
-            Algorithm("GPUBruteForce", input_p, input_q) {
+            Algorithm("GPUBruteForceDiscarting", input_p, input_q) {
         }
 
     protected:

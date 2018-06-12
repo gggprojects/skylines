@@ -26,7 +26,7 @@ namespace sl { namespace queries { namespace algorithms {
     }
 
     template<class Comparator>
-    static inline int Dominator(
+    __host__ __device__ static inline int Dominator(
         const sl::queries::data::WeightedPoint &a,
         const sl::queries::data::WeightedPoint &b,
         const sl::queries::data::Point *input_q,
