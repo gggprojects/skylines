@@ -37,23 +37,27 @@ __device__ void _ComputePartialSkylineDiscarting(
         shared_input_p[threadIdx.x] = input_p[threadIdx.x + current_input_p_pos];
         __syncthreads();
 
-        if (is_skyline && result[global_pos] == 0) {
-            for (int i = 0; i < SHARED_MEM_ELEMENTS; i++) {
-                if (current_input_p_pos + i != global_pos && current_input_p_pos + i < input_p_size) { // do not check against the same point
-                    thread_statistics.num_comparisions_++;
-
-                    int dominator = sl::queries::algorithms::Dominator(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, comparator_function);
-                    if (dominator == 1) {
-                        is_skyline = false;
-                        result[global_pos] = -1;
-                        break;
-                    } else if (dominator == 0) {
-                        result[current_input_p_pos + i] = -1;
+        if (is_skyline) {
+            if ((current_input_p_pos + SHARED_MEM_ELEMENTS) > global_pos) {
+                for (int i = 0; i < SHARED_MEM_ELEMENTS; i++) {
+                    if ((current_input_p_pos + i) > global_pos && (current_input_p_pos + i) < input_p_size) {
+                        int dominator = sl::queries::algorithms::Dominator(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, &thread_statistics.num_comparisions_, comparator_function);
+                        if (dominator == 1) {
+                            is_skyline = false;
+                            result[global_pos] = -1;
+                        }
+                        else if (dominator == 0) {
+                            result[current_input_p_pos + i] = -1;
+                        }
                     }
                 }
             }
         }
         __syncthreads();
+
+        if (is_skyline) {
+            is_skyline = (result[global_pos] == 0);
+        }
     }
 
     if (is_skyline) {

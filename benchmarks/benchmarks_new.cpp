@@ -7,11 +7,19 @@
 
 #include "common/time.hpp"
 #include "queries/weighted.hpp"
+#include <boost/filesystem.hpp>
 
 using namespace sl::queries;
 
 WeightedQuery wq;
 HANDLE hConsole;
+
+enum class DesiredOutputSize {
+    SMALL,
+    BIG
+};
+
+DesiredOutputSize desired_output_size = DesiredOutputSize::SMALL;
 
 struct ExperimentStadistics {
     ExperimentStadistics() {
@@ -74,11 +82,11 @@ std::string GetAlgorithmTypeString(WeightedQuery::AlgorithmType algorithm_type, 
 }
 
 int ChooseIterations(size_t input_p_size) {
-    if (input_p_size == 2000) return 50;
+    if (input_p_size == 2000) return 30;
     if (input_p_size == 5000) return 20;
-    if (input_p_size == 10000) return 10;
-    if (input_p_size == 20000) return 5;
-    if (input_p_size == 50000) return 2;
+    if (input_p_size == 10000) return 5;
+    if (input_p_size == 20000) return 2;
+    if (input_p_size == 50000) return 1;
     if (input_p_size == 75000) return 1;
     if (input_p_size == 100000) return 1;
     return 1;
@@ -108,8 +116,13 @@ ExperimentStadistics Execute(
 void LoadData(size_t input_p_size, size_t input_q_size) {
     data::UniformRealRandomGenerator rrg_x(0., 1.);
     data::UniformRealRandomGenerator rrg_y(0., 1.);
+
+    int max_v = desired_output_size == DesiredOutputSize::SMALL ? 10 : 1;
+    
+    //data::UniformIntRandomGenerator irg(1, 10); // small output
     //data::UniformIntRandomGenerator irg(1, 1); // big output
-    data::UniformIntRandomGenerator irg(1, 10); // small output
+
+    data::UniformIntRandomGenerator irg(1, max_v);
     wq.InitRandom(input_p_size, input_q_size, rrg_x, rrg_y, irg);
 }
 
@@ -199,10 +212,18 @@ void writeToCSV(
     const std::string &filename,
     const std::map<Experiment, ExperimentStadistics> &experiments,
     std::function<std::string(const std::pair<Experiment, ExperimentStadistics> &es)> f) {
+    std::string folder = desired_output_size == DesiredOutputSize::SMALL ? "small_output" : "big_output";
+
+    if (!boost::filesystem::exists(folder)) {
+        if (!boost::filesystem::create_directory(folder)) {
+            std::cout << "Error\n";
+        }
+    }
+
     {
         algorithms::DistanceType distance_type = algorithms::DistanceType::Nearest;
-        std::ofstream file("nearest-" + filename + ".csv");
-        std::ofstream file_top_k("nearest-" + filename + "-top-k.csv");
+        std::ofstream file(folder + "/nearest-" + filename + ".csv");
+        std::ofstream file_top_k(folder + "/nearest-" + filename + "-top-k.csv");
         file << "Input size,Single thread BF,Single thread BF Discarting,Multi thread BF,Multi thread BF discarding,Single thread sorting,Multi thread sorting,GPU BF,GPU BF Discarting\n";
         file_top_k << "Input size,Single thread BF,Single thread BF Discarting,Multi thread BF,Multi thread BF discarding,Single thread sorting,Multi thread sorting,GPU BF,GPU BF Discarting\n";
         for (const std::pair<Experiment, ExperimentStadistics> &kvp : experiments) {
@@ -226,8 +247,8 @@ void writeToCSV(
     }
     {
         algorithms::DistanceType distance_type = algorithms::DistanceType::Furthest;
-        std::ofstream file("furthest-" + filename + ".csv");
-        std::ofstream file_top_k("furthest-" + filename + "-top-k.csv");
+        std::ofstream file(folder + "/furthest-" + filename + ".csv");
+        std::ofstream file_top_k(folder + "/furthest-" + filename + "-top-k.csv");
         file << "Input size,Single thread BF,Single thread BF Discarting,Multi thread BF,Multi thread BF discarding,Single thread sorting,Multi thread sorting,GPU BF,GPU BF Discarting\n";
         file_top_k << "Input size,Single thread BF,Single thread BF Discarting,Multi thread BF,Multi thread BF discarding,Single thread sorting,Multi thread sorting,GPU BF,GPU BF Discarting\n";
         for (const std::pair<Experiment, ExperimentStadistics> &kvp : experiments) {
@@ -244,6 +265,7 @@ void writeToCSV(
                 ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
                 ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_))) << ',';
                 ff << f(*experiments.find(Experiment(WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE_DISCARTING, distance_type, kvp.first.input_p_size_, kvp.first.input_q_size_, kvp.first.top_k_)));
+                ff << '\n';
             }
         }
         file.close();
@@ -283,16 +305,50 @@ int main() {
 
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
+    //{
+    //    desired_output_size = DesiredOutputSize::SMALL;
+    //    std::map<Experiment, ExperimentStadistics> experiments;
+    //    RunAllExperiments(2000, 100, &experiments, 10);
+    //    RunAllExperiments(5000, 100, &experiments, 10);
+    //    RunAllExperiments(10000, 100, &experiments, 20);
+    //    RunAllExperiments(20000, 100, &experiments, 20);
+    //    RunAllExperiments(50000, 100, &experiments, 50);
+    //    RunAllExperiments(75000, 100, &experiments, 75);
+    //    RunAllExperiments(100000, 100, &experiments, 100);
+    //    writeFiles(experiments);
+    //}
 
-    std::map<Experiment, ExperimentStadistics> experiments;
+    {
+        desired_output_size = DesiredOutputSize::BIG;
+        std::map<Experiment, ExperimentStadistics> experiments;
+        //RunAllExperiments(2000, 100, &experiments, 10);
+        //RunAllExperiments(5000, 100, &experiments, 10);
+        //RunAllExperiments(10000, 100, &experiments, 20);
+        //RunAllExperiments(20000, 100, &experiments, 20);
+        //RunAllExperiments(50000, 100, &experiments, 50);
+        //RunAllExperiments(75000, 100, &experiments, 75);
+        RunAllExperiments(100000, 100, &experiments, 100);
+        writeFiles(experiments);
+    }
 
-    RunAllExperiments(2000, 100, &experiments, 10);
-    RunAllExperiments(5000, 100, &experiments, 10);
-    RunAllExperiments(10000, 100, &experiments, 20);
-    RunAllExperiments(20000, 100, &experiments, 20);
-    RunAllExperiments(50000, 100, &experiments, 50);
-    RunAllExperiments(75000, 100, &experiments, 75);
-    RunAllExperiments(100000, 100, &experiments, 100);
-    writeFiles(experiments);
+
+
+    //{
+    //    desired_output_size = DesiredOutputSize::SMALL;
+    //    std::map<Experiment, ExperimentStadistics> experiments;
+    //    //RunAllExperiments(32, 10, &experiments, 10);
+    //    RunAllExperiments(5000, 100, &experiments, 10);
+    //    //RunAllExperiments(100, 10, &experiments, 20);
+    //    //writeFiles(experiments);
+    //}
+
+    //{
+    //    desired_output_size = DesiredOutputSize::BIG;
+    //    std::map<Experiment, ExperimentStadistics> experiments;
+    //    RunAllExperiments(200, 10, &experiments, 10);
+    //    RunAllExperiments(500, 10, &experiments, 10);
+    //    RunAllExperiments(100, 10, &experiments, 20);
+    //    writeFiles(experiments);
+    //}
 
 }

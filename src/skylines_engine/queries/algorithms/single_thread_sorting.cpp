@@ -37,14 +37,13 @@ namespace sl { namespace queries { namespace algorithms {
         for (skyline_candidate = first_element + 1;
             skyline_candidate != last_element;
             ++skyline_candidate) {
-            std::vector<data::WeightedPoint>::const_reverse_iterator skyline_element = skylines->crbegin();
+            std::vector<data::WeightedPoint>::const_iterator skyline_element = skylines->cbegin();
             bool is_skyline = true;
-            while (is_skyline && skyline_element != skylines->crend()) {
-                if (IsDominated(*skyline_candidate, *skyline_element, input_q, q_size, comparator_function)) {
+            while (is_skyline && skyline_element != skylines->cend()) {
+                if (IsDominated(*skyline_candidate, *skyline_element, input_q, q_size, &stats_results.num_comparisions_, comparator_function)) {
                     is_skyline = false;
                 }
                 skyline_element++;
-                stats_results.num_comparisions_++;
             }
             if (is_skyline) {
                 skylines->emplace_back(*skyline_candidate);

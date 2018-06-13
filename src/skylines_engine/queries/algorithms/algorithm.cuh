@@ -14,10 +14,12 @@ namespace sl { namespace queries { namespace algorithms {
         const sl::queries::data::WeightedPoint &b,
         const sl::queries::data::Point *input_q,
         const int q_size,
+        size_t *num_comparisons,
         Comparator comparator_function) {
         for (int i = 0; i < q_size; i++) {
             float a_distance = a.SquaredDistance(input_q[i]);
             float b_distance = b.SquaredDistance(input_q[i]);
+            (*num_comparisons)++;
             if (comparator_function(a_distance, b_distance)) {
                 return false;
             }
@@ -31,6 +33,7 @@ namespace sl { namespace queries { namespace algorithms {
         const sl::queries::data::WeightedPoint &b,
         const sl::queries::data::Point *input_q,
         const int q_size, 
+        size_t *num_comparisons,
         Comparator comparator_function) {
         bool a_is_dominated_by_b = true;
         bool b_is_dominated_by_a = true;
@@ -38,6 +41,7 @@ namespace sl { namespace queries { namespace algorithms {
             float a_distance = a.SquaredDistance(input_q[i]);
             float b_distance = b.SquaredDistance(input_q[i]);
 
+            (*num_comparisons)++;
             if (comparator_function(a_distance, b_distance)) {
                 a_is_dominated_by_b = false;
                 if (!b_is_dominated_by_a) return -1;

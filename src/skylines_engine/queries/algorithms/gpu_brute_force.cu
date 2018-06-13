@@ -40,8 +40,7 @@ __device__ void _ComputePartialSkyline(
         if (is_skyline) {
             for (int i = 0; i < SHARED_MEM_ELEMENTS; i++) {
                 if (current_input_p_pos + i != global_pos && current_input_p_pos + i < input_p_size) { // do not check against the same point
-                    thread_statistics.num_comparisions_++;
-                    if (sl::queries::algorithms::IsDominated(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, comparator_function)) {
+                    if (sl::queries::algorithms::IsDominated(skyline_candidate, shared_input_p[i], device_input_q, input_q_size, &thread_statistics.num_comparisions_, comparator_function)) {
                         is_skyline = false;
                         break;
                     }

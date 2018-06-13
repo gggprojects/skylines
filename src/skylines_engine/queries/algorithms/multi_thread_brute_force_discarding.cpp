@@ -31,7 +31,7 @@ namespace sl { namespace queries { namespace algorithms {
                 std::vector<bool>::iterator dominator_candidate_is_skyline = is_skyline + 1;
                 while (*is_skyline && dominator_candidate != last_p_element) {
                     if (*dominator_candidate_is_skyline) {
-                        int dominator = Dominator(*skyline_candidate, *dominator_candidate, input_q, q_size, comparator_function);
+                        int dominator = Dominator(*skyline_candidate, *dominator_candidate, input_q, q_size, &stats_results.num_comparisions_, comparator_function);
                         if (dominator == 1) {
                             std::lock_guard<std::mutex> lock_(are_skylines_mutex);
                             *is_skyline = false;
@@ -40,12 +40,11 @@ namespace sl { namespace queries { namespace algorithms {
                             *dominator_candidate_is_skyline = false;
                         }
                     } else {
-                        if (IsDominated(*skyline_candidate, *dominator_candidate, input_q, q_size, comparator_function)) {
+                        if (IsDominated(*skyline_candidate, *dominator_candidate, input_q, q_size, &stats_results.num_comparisions_, comparator_function)) {
                             std::lock_guard<std::mutex> lock_(are_skylines_mutex);
                             *is_skyline = false;
                         }
                     }
-                    stats_results.num_comparisions_++;
                     ++dominator_candidate;
                     ++dominator_candidate_is_skyline;
                 }

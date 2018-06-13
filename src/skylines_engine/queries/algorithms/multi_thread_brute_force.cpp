@@ -29,10 +29,9 @@ namespace sl { namespace queries { namespace algorithms {
             bool is_skyline = true;
             while (is_skyline && dominator_candidate != input_p_.GetPoints().cend()) {
                 if (skyline_candidate != dominator_candidate) {
-                    if (IsDominated(*skyline_candidate, *dominator_candidate, input_q, q_size, comparator_function)) {
+                    if (IsDominated(*skyline_candidate, *dominator_candidate, input_q, q_size, &stats_results.num_comparisions_, comparator_function)) {
                         is_skyline = false;
                     }
-                    stats_results.num_comparisions_++;
                 }
                 ++dominator_candidate;
             }
