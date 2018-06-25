@@ -9,6 +9,9 @@ enable_testing()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+#prevent cmake to generate ZERO_CHECK project
+set(CMAKE_SUPPRESS_REGENERATION true)
+
 # Cmake Inclusions
 include(cmake/util.cmake)
 
@@ -40,7 +43,6 @@ include_directories("submodule/apis_vs2015/spdlog-master/include")
 
 #qt
 set(CMAKE_PREFIX_PATH "submodule/apis_vs2015/Qt/msvc2015_64")
-#"C:/git_src/skylines/submodule/apis_vs2015/Qt/msvc2015_64"
 set(CMAKE_INCLUDE_CURRENT_DIR ON) # Find includes in corresponding build directories
 find_package(Qt5Widgets)
 find_package(Qt5Core)
@@ -61,7 +63,8 @@ include_directories(SYSTEM "submodule/apis_vs2015/fast-cpp-csv-parser-master/inc
 
 #CUDA
 find_package(CUDA QUIET REQUIRED)
-LIST(APPEND CUDA_NVCC_FLAGS -gencode=arch=compute_61,code=sm_61 --use_fast_math) #gpu-architecture == arch gpu-code == code
+#LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_32 --gpu-code=sm_62 --use_fast_math) #gpu-architecture == arch gpu-code == code
+LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_61 --gpu-code=sm_61)
 LIST(APPEND CUDA_NVCC_FLAGS_DEBUG -g -G)
 CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/skylines_engine)
 set(CUDA_VERBOSE_BUILD ON CACHE BOOL "" FORCE)
@@ -71,7 +74,7 @@ include_directories(${CUDA_INCLUDE_DIRS})
 if(WIN32)
 	set(DEPENDENCY_LIBS_AND_FILES
 	   #cuda
-	   "${CUDA_TOOLKIT_ROOT_DIR}/bin/cudart64_80.dll"
+	   "${CUDA_TOOLKIT_ROOT_DIR}/bin/cudart64_92.dll"
 	   
 	   #freeglut
        "${CMAKE_CURRENT_SOURCE_DIR}/submodule/apis_vs2015/freeglut-3.0/bin/x64/freeglut.dll"

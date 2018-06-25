@@ -26,6 +26,7 @@ namespace sl { namespace queries {
 
     bool DataCapable::FromFile(const std::string &filename) {
         Clear();
+        filename_loaded_ = filename;
         if (HasEnding(filename, "json")) {
             return ReadJsonFile(filename);
         }

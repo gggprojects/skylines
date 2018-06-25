@@ -1,26 +1,24 @@
-#ifndef TIME_LAPSE_HPP_SLSK253_IMPL
-#define TIME_LAPSE_HPP_SLSK253_IMPL
+#ifndef TIME_TIME_HPP
+#define TIME_TIME_HPP
 
 #include <chrono>
 
 #define fw(what) std::forward<decltype(what)>(what)
 
 namespace sl { namespace time {
-    /**
-    * @ class measure
-    * @ brief Class to measure the execution time of a callable
+    /*
+    * class to measure the execution time of a callable
     */
     template <
         typename TimeT = std::chrono::milliseconds, class ClockT = std::chrono::system_clock
-    >
-    struct measure {
+        >
+        struct measure {
         /**
         * @ fn    execution
         * @ brief Returns the quantity (count) of the elapsed time as TimeT units
         */
         template<typename F, typename ...Args>
-        static typename TimeT::rep execution(F&& func, Args&&... args)
-        {
+        static typename TimeT::rep execution(F&& func, Args&&... args) {
             auto start = ClockT::now();
 
             fw(func)(std::forward<Args>(args)...);

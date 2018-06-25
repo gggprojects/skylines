@@ -3,7 +3,7 @@
 
 namespace sl { namespace queries { namespace algorithms {
     enum class DistanceType {
-        Neartest,
+        Nearest,
         Furthest
     };
 }}}

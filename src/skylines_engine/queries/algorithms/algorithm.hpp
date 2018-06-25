@@ -16,29 +16,31 @@ namespace sl { namespace queries { namespace algorithms {
 
     class Algorithm : public common::SkylineElement {
     public:
+
         Algorithm(
             const std::string &logger,
-            const Data<data::WeightedPoint> &input_p, const Data<data::Point> &input_q);
+            const Data<data::WeightedPoint> &input_p,
+            const Data<data::Point> &input_q);
 
-        virtual void Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) = 0;
+        virtual data::Statistics Run(NonConstData<data::WeightedPoint> *output, DistanceType distance_type) = 0;
 
-        template<class Comparator>
-        inline bool static IsDominated(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q, Comparator comparator_function) {
-            return IsDominated_impl(a, b, q.data(), static_cast<int>(q.size()), comparator_function);
+        void SetTopK(size_t top_k) {
+            top_k_ = top_k;
         }
 
-        template<class Comparator>
-        inline int static Dominator(const data::WeightedPoint &a, const data::WeightedPoint &b, const std::vector<data::Point> &q, Comparator comparator_function) {
-            return Dominator_impl(a, b, q.data(), static_cast<int>(q.size()), comparator_function);
-        }
+        void ComputeTopK(const std::vector<data::WeightedPoint> &all_skylines, NonConstData<data::WeightedPoint> *output);
 
     protected:
+        std::pair<float, float> ComputeSkylineStatistics(const data::WeightedPoint &skyline);
+
         virtual bool Init(NonConstData<data::WeightedPoint> *output);
         bool IsEmpty();
         void ClearOutput(NonConstData<data::WeightedPoint> *output);
 
         const Data<data::WeightedPoint> &input_p_;
         const Data<data::Point> &input_q_;
+
+        size_t top_k_;
     };
 }}}
 

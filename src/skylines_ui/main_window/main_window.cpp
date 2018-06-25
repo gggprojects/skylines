@@ -21,20 +21,24 @@ namespace sl { namespace ui { namespace main_window {
         error::ErrorHandler("ui", "info"),
         QMainWindow(parent),
         ui_(new Ui::MainWindow),
-        distance_type_(queries::algorithms::DistanceType::Neartest) {
+        distance_type_(queries::algorithms::DistanceType::Nearest) {
         weighted_query_ptr_ = std::make_shared<sl::queries::WeightedQuery>();
         ui_->setupUi(this);
         ogl_ = new ogl::OGLWidget(weighted_query_ptr_, this);
         ui_->horizontalLayout_2->addWidget(ogl_);
-        connect(ui_->pushButton_STS, &QPushButton::clicked, this, &MainWindow::RunSingleThreadSorting);
+
         connect(ui_->pushButton_STBF, &QPushButton::clicked, this, &MainWindow::RunSingleThreadBruteForce);
         connect(ui_->pushButton_STBFDiscarting, &QPushButton::clicked, this, &MainWindow::RunSingleThreadBruteForceWithDiscarting);
-        connect(ui_->pushButton_MTBF, &QPushButton::clicked, this, &MainWindow::RunMultiThreadBruteForce);
-        connect(ui_->pushButton_MTS, &QPushButton::clicked, this, &MainWindow::RunMultiThreadSorting);
+        connect(ui_->pushButton_MTBFD, &QPushButton::clicked, this, &MainWindow::RunMultiThreadBruteForceDiscarting);
+        connect(ui_->pushButton_STS, &QPushButton::clicked, this, &MainWindow::RunSingleThreadSorting);
         connect(ui_->pushButton_GPUBF, &QPushButton::clicked, this, &MainWindow::RunGPUBruteForce);
 
         connect(ui_->actionSave_image_to_file, &QAction::triggered, this, &MainWindow::SaveImage);
         connect(ui_->initRandom_PB, &QPushButton::clicked, this, &MainWindow::InitRandom);
+
+        connect(ui_->initRandomP_PB, &QPushButton::clicked, this, &MainWindow::InitRandomP);
+        connect(ui_->initRandomQ_PB, &QPushButton::clicked, this, &MainWindow::InitRandomQ);
+
         connect(ui_->serialize_input_points_PB, &QPushButton::clicked, this, &MainWindow::SerializeInputPoints);
         connect(ui_->load_input_points_PB, &QPushButton::clicked, this, &MainWindow::LoadInputPoints);
         connect(ui_->clear_PB2, &QPushButton::clicked, this, &MainWindow::Clear);
@@ -45,10 +49,16 @@ namespace sl { namespace ui { namespace main_window {
         connect(ui_->listWidget_points, &QListWidget::itemSelectionChanged, this, &MainWindow::UpdateRender);
         connect(ui_->listWidget_points, &QListWidget::itemDoubleClicked, this, &MainWindow::RemoveSelectedPoint);
         connect(ui_->radioButton_Neartest, &QRadioButton::toggled, this, &MainWindow::DistanceTypeChanged);
+
+        connect(ui_->spinBox_topK, SIGNAL(valueChanged(int)), this, SLOT(SetTopK(int)));
     }
 
     MainWindow::~MainWindow() {
         delete ui_;
+    }
+
+    void MainWindow::SetTopK(int top_k) {
+        weighted_query_ptr_->SetTopK(static_cast<size_t>(top_k));
     }
 
     void MainWindow::RunSingleThreadBruteForce() {
@@ -57,7 +67,7 @@ namespace sl { namespace ui { namespace main_window {
     }
 
     void MainWindow::RunSingleThreadBruteForceWithDiscarting() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING, distance_type_);
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type_);
         ogl_->update();
     }
 
@@ -66,13 +76,8 @@ namespace sl { namespace ui { namespace main_window {
         ogl_->update();
     }
 
-    void MainWindow::RunMultiThreadBruteForce() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type_);
-        ogl_->update();
-    }
-
-    void MainWindow::RunMultiThreadSorting() {
-        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type_);
+    void MainWindow::RunMultiThreadBruteForceDiscarting() {
+        weighted_query_ptr_->RunAlgorithm(queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type_);
         ogl_->update();
     }
 
@@ -81,10 +86,54 @@ namespace sl { namespace ui { namespace main_window {
         ogl_->update();
     }
 
-    void MainWindow::InitRandom() {
-        weighted_query_ptr_->Clear();
-        weighted_query_ptr_->InitRandom(static_cast<size_t>(ui_->spinBox_P->value()), static_cast<size_t>(ui_->spinBox_Q->value()));
+    void MainWindow::InitRandomP() {
+        weighted_query_ptr_->ClearP();
+
+        double min_x = ui_->doubleSpinBox_MinX->value();
+        double min_y = ui_->doubleSpinBox_MinY->value();
+        double max_x = ui_->doubleSpinBox_MaxX->value();
+        double max_y = ui_->doubleSpinBox_MaxY->value();
+
+        int min_weight = ui_->spinBox_MinW->value();
+        int max_weight = ui_->spinBox_MaxW->value();
+
+        sl::queries::data::UniformRealRandomGenerator rrg_x(min_x, max_x);
+        sl::queries::data::UniformRealRandomGenerator rrg_y(min_y, max_y);
+        sl::queries::data::UniformIntRandomGenerator irg(min_weight, max_weight);
+
+        size_t p_size = static_cast<size_t>(ui_->spinBox_P->value());
+        weighted_query_ptr_->InitRandomP(p_size, rrg_x, rrg_y, irg);
+        weighted_query_ptr_->SetTopK(p_size);
         ogl_->update();
+    }
+
+    void MainWindow::InitRandomQ() {
+        weighted_query_ptr_->ClearQ();
+
+        double min_x = ui_->doubleSpinBox_MinX->value();
+        double min_y = ui_->doubleSpinBox_MinY->value();
+        double max_x = ui_->doubleSpinBox_MaxX->value();
+        double max_y = ui_->doubleSpinBox_MaxY->value();
+
+        int min_weight = ui_->spinBox_MinW->value();
+        int max_weight = ui_->spinBox_MaxW->value();
+
+        sl::queries::data::UniformRealRandomGenerator rrg_x(min_x, max_x);
+        sl::queries::data::UniformRealRandomGenerator rrg_y(min_y, max_y);
+        sl::queries::data::UniformIntRandomGenerator irg(min_weight, max_weight);
+
+        weighted_query_ptr_->InitRandomQ(static_cast<size_t>(ui_->spinBox_Q->value()), rrg_x, rrg_y);
+        ogl_->update();
+    }
+
+    void MainWindow::InitRandom() {
+        weighted_query_ptr_->ClearOutput();
+        InitRandomP();
+        InitRandomQ();
+
+        size_t num_p = weighted_query_ptr_->GetInputP().GetPoints().size();
+        ui_->spinBox_topK->setMaximum(static_cast<int>(num_p));
+        ui_->spinBox_topK->setValue(static_cast<int>(num_p));
     }
 
     void MainWindow::SaveImage() {
@@ -128,6 +177,10 @@ namespace sl { namespace ui { namespace main_window {
             QMessageBox::warning(this, "Error at loading points", "Error at loading points");
         }
 
+        size_t num_p = weighted_query_ptr_->GetInputP().GetPoints().size();
+        ui_->spinBox_topK->setMaximum(static_cast<int>(num_p));
+        ui_->spinBox_topK->setValue(static_cast<int>(num_p));
+
         ogl_->update();
     }
 
@@ -146,7 +199,7 @@ namespace sl { namespace ui { namespace main_window {
     }
     
     void MainWindow::PointSelected(int x, int y) {
-        QVector3D projected_point = ogl_->Unproject(QVector2D(x, y));
+        QVector3D projected_point = ogl_->Unproject(QVector2D(static_cast<float>(x), static_cast<float>(y)));
         size_t input_point_position = weighted_query_ptr_->GetClosetsPointPosition(queries::data::Point(projected_point.x(), projected_point.y()));
         ui_->listWidget_points->addItem(QString::fromStdString(std::to_string(input_point_position)));
         ogl_->update();
@@ -184,6 +237,6 @@ namespace sl { namespace ui { namespace main_window {
     }
 
     void MainWindow::DistanceTypeChanged(bool checked) {
-        distance_type_ = checked ? queries::algorithms::DistanceType::Neartest : queries::algorithms::DistanceType::Furthest;
+        distance_type_ = checked ? queries::algorithms::DistanceType::Nearest : queries::algorithms::DistanceType::Furthest;
     }
 }}}

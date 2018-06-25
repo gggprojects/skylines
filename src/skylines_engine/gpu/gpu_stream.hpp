@@ -24,9 +24,8 @@ namespace sl { namespace gpu {
 
         cudaStream_t operator()() const { return stream_; }
 
-        void Syncronize() {
-            cudaError_t e = cudaStreamSynchronize(stream_);
-            //check error
+        cudaError_t Syncronize() {
+            return cudaStreamSynchronize(stream_);
         }
 
     private:

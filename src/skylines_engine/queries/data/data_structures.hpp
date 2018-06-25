@@ -5,15 +5,25 @@
 
 #include "common/irenderable.hpp"
 #include "queries/data/random_generator.hpp"
+#include "queries/data/stadistics.hpp"
 
 namespace sl { namespace queries { namespace data {
+
+    struct Range {
+        double min_x;
+        double max_x;
+        double min_y;
+        double max_y;
+    };
 
     struct __align__(8) Point {
 
         Point() {}
 
-        //random initializer
-        Point(data::UniformRealRandomGenerator &r) : Point(static_cast<float>(r.Next()), static_cast<float>(r.Next())) {
+        Point(
+            data::UniformRealRandomGenerator &rrg_x,
+            data::UniformRealRandomGenerator &rrg_y) :
+            Point(static_cast<float>(rrg_x.Next()), static_cast<float>(rrg_y.Next())) {
         }
 
         Point(float x, float y) : x_(x), y_(y) {
@@ -24,10 +34,6 @@ namespace sl { namespace queries { namespace data {
 
         bool operator==(const Point &other) const {
             return x_ == other.x_ && y_ == other.y_;
-        }
-
-        __host__ __device__ inline float Distance(const Point &other) const {
-            return std::sqrtf(SquaredDistance(other));
         }
 
         __host__ __device__ inline float SquaredDistance(const Point &other) const {
@@ -47,8 +53,10 @@ namespace sl { namespace queries { namespace data {
 
         WeightedPoint() {}
 
-        WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), static_cast<int>(r.Next() * 10) % 10) {
-        //WeightedPoint(data::UniformRealRandomGenerator &r) : WeightedPoint(Point(r), 1) {
+        WeightedPoint(
+            data::UniformRealRandomGenerator &rrg_x,
+            data::UniformRealRandomGenerator &rrg_y,
+            data::UniformIntRandomGenerator &irg) : WeightedPoint(Point(rrg_x, rrg_y), irg.Next()) {
         }
 
         WeightedPoint(const Point &point, int weight) :
@@ -61,28 +69,12 @@ namespace sl { namespace queries { namespace data {
             weight_(other.weight_) {
         }
 
-        template<class Comparator>
-        bool IsDominated(const WeightedPoint &other, const std::vector<Point> &q, Comparator comparator) const {
-            for (const Point p_q : q) {
-                float distance = Distance(p_q);
-                float other_distance = other.Distance(p_q);
-                if (comparator(distance, other_distance)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
         bool operator==(const WeightedPoint &other) const {
             return point_ == other.point_ && weight_ == other.weight_;
         }
 
         bool operator!=(const WeightedPoint &other) const {
             return !(*this == other);
-        }
-
-        __host__ __device__ inline float Distance(const Point &other) const {
-            return point_.Distance(other) * weight_;
         }
 
         __host__ __device__ inline float SquaredDistance(const Point &other) const {

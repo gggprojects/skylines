@@ -8,6 +8,7 @@
 #include <celero/Celero.h>
 #include <csv.h>
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #pragma warning(pop)
 
 #include "queries/weighted.hpp"
@@ -15,13 +16,14 @@
 
 struct Experiment {
 public:
-    Experiment(size_t input_p_size, size_t input_q_size, std::string experiment_name) :
-        input_p_size_(input_p_size), input_q_size_(input_q_size), experiment_name_(experiment_name) {
+    Experiment(size_t input_p_size, size_t input_q_size, std::string experiment_name, sl::queries::algorithms::DistanceType distance_type, std::string filename) :
+        input_p_size_(input_p_size), input_q_size_(input_q_size), experiment_name_(experiment_name), distance_type_(distance_type), filename_(filename) {
     }
 
     size_t input_p_size_;
     size_t input_q_size_;
     std::string experiment_name_;
+    sl::queries::algorithms::DistanceType distance_type_;
     double baseline_;
     double max_usec_;
     double min_usec_;
@@ -31,14 +33,11 @@ public:
     double skewness_;
     double kurtosis_;
     double z_score_;
-    std::vector<size_t> output_size_;
+    std::vector<sl::queries::data::Statistics> statistics_;
+    std::string filename_;
 
     std::string GetSizeString() const {
         return std::move(std::to_string(input_p_size_) + "x" + std::to_string(input_q_size_));
-    }
-
-    std::string GetFileName() const {
-        return std::move(GetSizeString() + ".bin");
     }
 };
 
@@ -46,35 +45,44 @@ sl::queries::WeightedQuery wq;
 std::multimap<int64_t, Experiment> experiments;
 sl::queries::algorithms::DistanceType distance_type;
 
-void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_space) {
-    wq.InitRandom(input_p_size, input_q_size);
+void GenerateFile(size_t input_p_size, size_t input_q_size, uint64_t problem_space, bool create_files, std::string filename) {
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForce", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForceDiscarding", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForceDiscarding", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadSorting", distance_type, filename)));
+    //experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForce", distance_type, filename)));
+    //experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadSorting", distance_type, filename)));
+    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "GPUBruteForce", distance_type, filename)));
 
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForce")));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadBruteForceDiscarting")));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "SingleThreadSorting")));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "MultiThreadBruteForce")));
-    experiments.insert(std::make_pair(problem_space, Experiment(input_p_size, input_q_size, "GPUBruteForce")));
+    if (create_files) {
+        sl::queries::data::UniformRealRandomGenerator rrg_x(0., 1.);
+        sl::queries::data::UniformRealRandomGenerator rrg_y(0., 1.);
+        sl::queries::data::UniformIntRandomGenerator irg(1, 10);
 
-    std::string filename = experiments.equal_range(problem_space).first->second.GetFileName();
-    wq.ToFile(filename);
+        wq.InitRandom(input_p_size, input_q_size, rrg_x, rrg_y, irg);
+        wq.ToFile(filename);
+    }
 }
 
-void GenerateFiles() {
-    GenerateFile(2000, 100, 0);
-    GenerateFile(5000, 100, 1);
-    GenerateFile(10000, 100, 2);
-    GenerateFile(20000, 100, 3);
-    GenerateFile(50000, 100, 4);
-    GenerateFile(75000, 100, 5);
-    GenerateFile(100000, 100, 6);
+void GenerateFiles(bool create_files) {
+    //GenerateFile(20000, 1, 0, false, "20000x1_middle.bin");
+    //GenerateFile(20000, 1, 1, false, "20000x1_separated.bin");
 
-    //GenerateFile(1000, 10, 0);
-    //GenerateFile(2000, 10, 1);
-    //GenerateFile(3000, 10, 2);
-    //GenerateFile(4, 10, 3);
-    //GenerateFile(5, 10, 4);
-    //GenerateFile(6, 10, 5);
-    //GenerateFile(7, 10, 6);
+    GenerateFile(2000, 100, 0, create_files, "2000x100.bin");
+    GenerateFile(5000, 100, 1, create_files, "5000x100.bin");
+    GenerateFile(10000, 100, 2, create_files, "10000x100.bin");
+    GenerateFile(20000, 100, 3, create_files, "20000x100.bin");
+    GenerateFile(50000, 100, 4, create_files, "50000x100.bin");
+    GenerateFile(75000, 100, 5, create_files, "75000x100.bin");
+    GenerateFile(100000, 100, 6, create_files, "100000x100.bin");
+
+    //GenerateFile(10, 10, 0, create_files, "10x10.bin");
+    //GenerateFile(20, 10, 1, create_files, "20x10.bin");
+    //GenerateFile(30, 10, 2, create_files, "30x10.bin");
+    //GenerateFile(40, 10, 3, create_files, "40x10.bin");
+    //GenerateFile(50, 10, 4, create_files, "50x10.bin");
+    //GenerateFile(60, 10, 5, create_files, "60x10.bin");
+    //GenerateFile(70, 10, 6, create_files, "70x10.bin");
 }
 
 std::string GetHeader() {
@@ -138,7 +146,7 @@ void PreProcessFile(const std::string &filename) {
     t2.close();
 }
 
-void TransformCSV(const std::string &filename) {
+void TransformCSV(const std::string &filename, const std::string &destination_filename) {
 
     PreProcessFile(filename);
 
@@ -163,10 +171,14 @@ void TransformCSV(const std::string &filename) {
         it->second.z_score_ = z_score;
     }
 
-    WriteFile(filename + ".transformed-improvement.csv", [](const Experiment &e) -> double { return e.baseline_; });
-    WriteFile(filename + ".transformed-running-time-min.csv", [](const Experiment &e) -> double { return e.min_usec_ / 1000000.0; });
-    WriteFile(filename + ".transformed-variance.csv", [](const Experiment &e) -> double { return e.variance_; });
-    WriteFile(filename + ".transformed-ouput_size.csv", [](const Experiment &e) -> size_t { return e.output_size_[0]; });
+    WriteFile(destination_filename + "-improvement.csv", [](const Experiment &e) -> double { return e.baseline_; });
+    WriteFile(destination_filename + "-running-time-min.csv", [](const Experiment &e) -> double { return e.min_usec_ / 1000000.0; });
+    //WriteFile(destination_filename + "-variance.csv", [](const Experiment &e) -> double { return e.variance_; });
+    WriteFile(destination_filename + "-ouput_size.csv", [](const Experiment &e) -> size_t { return e.statistics_[0].output_size_; });
+    WriteFile(destination_filename + "-num_comparisons.csv", [](const Experiment &e) -> size_t { return e.statistics_[0].num_comparisions_; });
+
+    boost::filesystem::path p(filename);
+    boost::filesystem::remove(p);
 }
 
 int main(int argc, char** argv) {
@@ -174,7 +186,7 @@ int main(int argc, char** argv) {
     desc.add_options()
         ("help", "produce help message")
         ("t", boost::program_options::value<std::string>(), "Run and create CSV")
-        ("d", boost::program_options::value<int>(), "Distance type. 0 Nearest, 1 furthest");
+        ("d", boost::program_options::value<int>(), "Distance type. 1 nearest, 0 furthest");
 
     boost::program_options::variables_map vm;
     try {
@@ -202,23 +214,20 @@ int main(int argc, char** argv) {
     }
 
     if (vm.count("d")) {
-        distance_type = vm["d"].as<int>() == 0 ? sl::queries::algorithms::DistanceType::Neartest : sl::queries::algorithms::DistanceType::Furthest;
-        if (distance_type == sl::queries::algorithms::DistanceType::Neartest) {
-            std::cout << "Executing nearest\n";
-        } else {
-            std::cout << "Executing furthest\n";
-        }
+        distance_type = (vm["d"].as<int>() == 1 ? sl::queries::algorithms::DistanceType::Neartest : sl::queries::algorithms::DistanceType::Furthest);
     } else {
         std::cout << desc << "\n";
         return 1;
     }
 
-    GenerateFiles();
-    celero::Run(argc, argv);
-    if (!filename.empty()) {
-        TransformCSV(filename);
-    }
+    GenerateFiles(distance_type == sl::queries::algorithms::DistanceType::Neartest);
 
+    char **argv_copy = new char*[3];
+    argv_copy[0] = argv[0];
+    argv_copy[1] = argv[1];
+    argv_copy[2] = argv[2];
+    celero::Run(3, argv_copy);
+    TransformCSV(filename, filename + (distance_type == sl::queries::algorithms::DistanceType::Neartest ? "-nearest" : "-furthest"));
 
     return 0;
 }
@@ -233,7 +242,9 @@ public:
         std::vector<std::pair<int64_t, uint64_t>> problemSpace;
 
         int64_t value = 0;
-        std::vector<int> iterations{ 100, 80, 50, 30, 10, 5, 1 };
+        //std::vector<int> iterations{ 100, 80, 10, 5, 3, 2, 1 };
+        std::vector<int> iterations{ 10, 10, 10, 5, 3, 2, 1 };
+        //std::vector<int> iterations{ 1, 1, 1, 1, 1, 1, 1 };
         using map_it = std::multimap<int64_t, Experiment>::iterator;
         std::pair<map_it, map_it> iterators = experiments.equal_range(value);
         do {
@@ -246,7 +257,7 @@ public:
     }
 
     void setUp(int64_t experimentValue) override {
-        std::string filename = experiments.equal_range(experimentValue).first->second.GetFileName();
+        std::string filename = experiments.equal_range(experimentValue).first->second.filename_;
         wq.FromFile(filename);
     }
 
@@ -258,40 +269,46 @@ protected:
     sl::queries::WeightedQuery wq;
 };
 
-void AddOutputSize(size_t input_q_size, std::string experiment_name, size_t output_size) {
+void AddStatistics(size_t input_q_size, std::string experiment_name, const sl::queries::data::Statistics &statistics, sl::queries::algorithms::DistanceType distance_type, const std::string &filename) {
     for (std::multimap<int64_t, Experiment>::iterator it = experiments.begin(); it != experiments.end(); it++) {
-        if (it->second.input_p_size_ == input_q_size && it->second.experiment_name_ == experiment_name) {
-            it->second.output_size_.push_back(output_size);
+        if (it->second.input_p_size_ == input_q_size && it->second.experiment_name_ == experiment_name && it->second.distance_type_ == distance_type && it->second.filename_ == filename) {
+            it->second.statistics_.push_back(statistics);
             return;
         }
     }
 }
 
 BASELINE_F(SkylineComputation, SingleThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type);
-    AddOutputSize(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForce", wq.GetOuput().GetPoints().size());
+    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForce", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
-BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarting, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARTING, distance_type);
-    AddOutputSize(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForceDiscarting", wq.GetOuput().GetPoints().size());
+BENCHMARK_F(SkylineComputation, SingleThreadBruteForceDiscarding, InitFromBinaryFileFixture, 5, 10) {
+    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadBruteForceDiscarding", statistics, distance_type, wq.GetFileNameLoaded());
+}
+
+BENCHMARK_F(SkylineComputation, MultiThreadBruteForceDiscarding, InitFromBinaryFileFixture, 5, 10) {
+    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE_DISCARDING, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForceDiscarding", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
 BENCHMARK_F(SkylineComputation, SingleThreadSorting, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type);
-    AddOutputSize(wq.GetInputP().GetPoints().size(), "SingleThreadSorting", wq.GetOuput().GetPoints().size());
+    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::SINGLE_THREAD_SORTING, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "SingleThreadSorting", statistics, distance_type, wq.GetFileNameLoaded());
 }
 
-BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type);
-    AddOutputSize(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForce", wq.GetOuput().GetPoints().size());
-}
+//BENCHMARK_F(SkylineComputation, MultiThreadBruteForce, InitFromBinaryFileFixture, 5, 10) {
+//    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_BRUTE_FORCE, distance_type);
+//    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadBruteForce", statistics, distance_type, wq.GetFileNameLoaded());
+//}
 
 //BENCHMARK_F(SkylineComputation, MultiThreadSorting, InitFromBinaryFileFixture, 5, 10) {
-//    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING);
+//    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::MULTI_THREAD_SORTING, distance_type);
+//    AddStatistics(wq.GetInputP().GetPoints().size(), "MultiThreadSorting", statistics, distance_type);
 //}
 
 BENCHMARK_F(SkylineComputation, GPUBruteForce, InitFromBinaryFileFixture, 5, 10) {
-    wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type);
-    AddOutputSize(wq.GetInputP().GetPoints().size(), "GPUBruteForce", wq.GetOuput().GetPoints().size());
+    sl::queries::data::Statistics statistics = wq.RunAlgorithm(sl::queries::WeightedQuery::AlgorithmType::GPU_BRUTE_FORCE, distance_type);
+    AddStatistics(wq.GetInputP().GetPoints().size(), "GPUBruteForce", statistics, distance_type, wq.GetFileNameLoaded());
 }
