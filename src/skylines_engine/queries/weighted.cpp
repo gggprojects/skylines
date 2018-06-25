@@ -8,6 +8,7 @@
 namespace sl { namespace queries {
     WeightedQuery::WeightedQuery(unsigned int gpu_id) :
         SkylineElement("WeightedQuery", "info"), algorithms_(8) {
+		gpu_devices.SetGPU(gpu_id);
         algorithms_[AlgorithmType::SINGLE_THREAD_BRUTE_FORCE] = std::make_shared<algorithms::SingleThreadBruteForce>(input_p_, input_q_);
         algorithms_[AlgorithmType::SINGLE_THREAD_BRUTE_FORCE_DISCARDING] = std::make_shared<algorithms::SingleThreadBruteForceDiscarting>(input_p_, input_q_);
         algorithms_[AlgorithmType::SINGLE_THREAD_SORTING] = std::make_shared<algorithms::SingleThreadSorting>(input_p_, input_q_);

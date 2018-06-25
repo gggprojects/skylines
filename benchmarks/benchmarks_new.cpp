@@ -11,7 +11,7 @@
 
 using namespace sl::queries;
 
-WeightedQuery wq;
+WeightedQuery wq(1);
 HANDLE hConsole;
 
 enum class DesiredOutputSize {
@@ -318,37 +318,37 @@ int main() {
     //    writeFiles(experiments);
     //}
 
-    {
-        desired_output_size = DesiredOutputSize::BIG;
-        std::map<Experiment, ExperimentStadistics> experiments;
-        //RunAllExperiments(2000, 100, &experiments, 10);
-        //RunAllExperiments(5000, 100, &experiments, 10);
-        //RunAllExperiments(10000, 100, &experiments, 20);
-        //RunAllExperiments(20000, 100, &experiments, 20);
-        //RunAllExperiments(50000, 100, &experiments, 50);
-        //RunAllExperiments(75000, 100, &experiments, 75);
-        RunAllExperiments(100000, 100, &experiments, 100);
-        writeFiles(experiments);
-    }
-
-
-
-    //{
-    //    desired_output_size = DesiredOutputSize::SMALL;
-    //    std::map<Experiment, ExperimentStadistics> experiments;
-    //    //RunAllExperiments(32, 10, &experiments, 10);
-    //    RunAllExperiments(5000, 100, &experiments, 10);
-    //    //RunAllExperiments(100, 10, &experiments, 20);
-    //    //writeFiles(experiments);
-    //}
-
     //{
     //    desired_output_size = DesiredOutputSize::BIG;
     //    std::map<Experiment, ExperimentStadistics> experiments;
-    //    RunAllExperiments(200, 10, &experiments, 10);
-    //    RunAllExperiments(500, 10, &experiments, 10);
-    //    RunAllExperiments(100, 10, &experiments, 20);
+    //    //RunAllExperiments(2000, 100, &experiments, 10);
+    //    //RunAllExperiments(5000, 100, &experiments, 10);
+    //    //RunAllExperiments(10000, 100, &experiments, 20);
+    //    //RunAllExperiments(20000, 100, &experiments, 20);
+    //    //RunAllExperiments(50000, 100, &experiments, 50);
+    //    //RunAllExperiments(75000, 100, &experiments, 75);
+    //    RunAllExperiments(100000, 100, &experiments, 100);
     //    writeFiles(experiments);
     //}
+
+
+
+    {
+        desired_output_size = DesiredOutputSize::SMALL;
+        std::map<Experiment, ExperimentStadistics> experiments;
+        RunAllExperiments(200, 10, &experiments, 10);
+        RunAllExperiments(500, 10, &experiments, 10);
+        RunAllExperiments(100, 10, &experiments, 20);
+        writeFiles(experiments);
+    }
+
+    {
+        desired_output_size = DesiredOutputSize::BIG;
+        std::map<Experiment, ExperimentStadistics> experiments;
+        RunAllExperiments(200, 10, &experiments, 10);
+        RunAllExperiments(500, 10, &experiments, 10);
+        RunAllExperiments(100, 10, &experiments, 20);
+        writeFiles(experiments);
+    }
 
 }

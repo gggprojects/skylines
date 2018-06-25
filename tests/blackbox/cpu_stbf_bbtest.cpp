@@ -25,7 +25,7 @@ using namespace sl::queries;
 
 class InputInitializer : public ::testing::TestWithParam<InputParameters> {
 public:
-    InputInitializer() {
+    InputInitializer():wq(1) {
     }
 
     virtual void SetUp() {
