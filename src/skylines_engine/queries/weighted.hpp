@@ -55,6 +55,7 @@ namespace sl { namespace queries {
     private:
         gpu::GPUDevices gpu_devices;
         std::vector<std::shared_ptr<algorithms::Algorithm>> algorithms_;
+		int max_weight, min_weight;
     };
 }}
 #endif // !SKYLINES_QUERIES_WEIGHTED_HPP
