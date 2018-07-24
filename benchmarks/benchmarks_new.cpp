@@ -11,7 +11,7 @@
 
 using namespace sl::queries;
 
-WeightedQuery wq;
+WeightedQuery wq(1);
 HANDLE hConsole;
 
 enum class DesiredOutputSize {
@@ -115,15 +115,24 @@ ExperimentStadistics Execute(
 
 void LoadData(size_t input_p_size, size_t input_q_size) {
     data::UniformRealRandomGenerator rrg_x(0., 1.);
-    data::UniformRealRandomGenerator rrg_y(0., 1.);
+	data::UniformRealRandomGenerator rrg_y(0., 1.);
 
-    int max_v = desired_output_size == DesiredOutputSize::SMALL ? 10 : 1;
-    
-    //data::UniformIntRandomGenerator irg(1, 10); // small output
-    //data::UniformIntRandomGenerator irg(1, 1); // big output
+	
+ //   int max_v = desired_output_size == DesiredOutputSize::SMALL ? 10 : 1;
+ //   
+ //   //data::UniformIntRandomGenerator irg(1, 10); // small output
+ //   //data::UniformIntRandomGenerator irg(1, 1); // big output
+ //   data::UniformIntRandomGenerator irg(1, max_v); 
+ //   wq.InitRandom(input_p_size, input_q_size, rrg_x, rrg_y, irg);
 
-    data::UniformIntRandomGenerator irg(1, max_v);
-    wq.InitRandom(input_p_size, input_q_size, rrg_x, rrg_y, irg);
+	data::UniformIntRandomGenerator irg(1, 10);
+	if (desired_output_size == DesiredOutputSize::SMALL) {
+		data::UniformRealRandomGenerator rrg_xq(0.15, 0.85);
+		data::UniformRealRandomGenerator rrg_yq(0.15, 0.85);
+		wq.InitRandomP(input_p_size, rrg_x, rrg_y, irg);
+		wq.InitRandomQ(input_p_size, rrg_xq, rrg_yq);
+	}
+	else wq.InitRandom(input_p_size, input_q_size, rrg_x, rrg_y, irg);
 }
 
 void Compare(const Experiment &baseline_experiment, const Experiment &b, const std::map<Experiment, ExperimentStadistics> &experiments, size_t top_k) {
@@ -305,28 +314,28 @@ int main() {
 
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    //{
-    //    desired_output_size = DesiredOutputSize::SMALL;
-    //    std::map<Experiment, ExperimentStadistics> experiments;
-    //    RunAllExperiments(2000, 100, &experiments, 10);
-    //    RunAllExperiments(5000, 100, &experiments, 10);
-    //    RunAllExperiments(10000, 100, &experiments, 20);
-    //    RunAllExperiments(20000, 100, &experiments, 20);
-    //    RunAllExperiments(50000, 100, &experiments, 50);
-    //    RunAllExperiments(75000, 100, &experiments, 75);
-    //    RunAllExperiments(100000, 100, &experiments, 100);
-    //    writeFiles(experiments);
-    //}
+    {
+        desired_output_size = DesiredOutputSize::SMALL;
+        std::map<Experiment, ExperimentStadistics> experiments;
+        RunAllExperiments(2000, 100, &experiments, 10);
+        RunAllExperiments(5000, 100, &experiments, 10);
+        RunAllExperiments(10000, 100, &experiments, 20);
+        RunAllExperiments(20000, 100, &experiments, 20);
+        RunAllExperiments(50000, 100, &experiments, 50);
+        RunAllExperiments(75000, 100, &experiments, 75);
+        RunAllExperiments(100000, 100, &experiments, 100);
+        writeFiles(experiments);
+    }
 
     {
         desired_output_size = DesiredOutputSize::BIG;
         std::map<Experiment, ExperimentStadistics> experiments;
-        //RunAllExperiments(2000, 100, &experiments, 10);
-        //RunAllExperiments(5000, 100, &experiments, 10);
-        //RunAllExperiments(10000, 100, &experiments, 20);
-        //RunAllExperiments(20000, 100, &experiments, 20);
-        //RunAllExperiments(50000, 100, &experiments, 50);
-        //RunAllExperiments(75000, 100, &experiments, 75);
+		RunAllExperiments(2000, 100, &experiments, 10);
+		RunAllExperiments(5000, 100, &experiments, 10);
+		RunAllExperiments(10000, 100, &experiments, 20);
+		RunAllExperiments(20000, 100, &experiments, 20);
+		RunAllExperiments(50000, 100, &experiments, 50);
+		RunAllExperiments(75000, 100, &experiments, 75);
         RunAllExperiments(100000, 100, &experiments, 100);
         writeFiles(experiments);
     }
@@ -336,10 +345,10 @@ int main() {
     //{
     //    desired_output_size = DesiredOutputSize::SMALL;
     //    std::map<Experiment, ExperimentStadistics> experiments;
-    //    //RunAllExperiments(32, 10, &experiments, 10);
-    //    RunAllExperiments(5000, 100, &experiments, 10);
-    //    //RunAllExperiments(100, 10, &experiments, 20);
-    //    //writeFiles(experiments);
+    //    RunAllExperiments(200, 10, &experiments, 10);
+    //    RunAllExperiments(500, 10, &experiments, 10);
+    //    RunAllExperiments(100, 10, &experiments, 20);
+    //    writeFiles(experiments);
     //}
 
     //{

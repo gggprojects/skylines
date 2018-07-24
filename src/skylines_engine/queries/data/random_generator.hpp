@@ -42,6 +42,9 @@ namespace sl { namespace queries { namespace data {
         int Next() final {
             return dis(gen);
         }
+
+		int Min() { return dis.min(); }
+		int Max() { return dis.max(); }
     private:
         std::uniform_int_distribution<> dis;
     };

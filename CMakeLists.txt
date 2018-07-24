@@ -64,7 +64,7 @@ include_directories(SYSTEM "submodule/apis_vs2015/fast-cpp-csv-parser-master/inc
 #CUDA
 find_package(CUDA QUIET REQUIRED)
 #LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_32 --gpu-code=sm_62 --use_fast_math) #gpu-architecture == arch gpu-code == code
-LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_61 --gpu-code=sm_61)
+LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_35 --gpu-code=sm_35)
 LIST(APPEND CUDA_NVCC_FLAGS_DEBUG -g -G)
 CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/skylines_engine)
 set(CUDA_VERBOSE_BUILD ON CACHE BOOL "" FORCE)
@@ -74,7 +74,7 @@ include_directories(${CUDA_INCLUDE_DIRS})
 if(WIN32)
 	set(DEPENDENCY_LIBS_AND_FILES
 	   #cuda
-	   "${CUDA_TOOLKIT_ROOT_DIR}/bin/cudart64_92.dll"
+	   "${CUDA_TOOLKIT_ROOT_DIR}/bin/cudart64_80.dll"
 	   
 	   #freeglut
        "${CMAKE_CURRENT_SOURCE_DIR}/submodule/apis_vs2015/freeglut-3.0/bin/x64/freeglut.dll"
