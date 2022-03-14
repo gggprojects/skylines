@@ -74,7 +74,7 @@ include_directories(${CUDA_INCLUDE_DIRS})
 if(WIN32)
 	set(DEPENDENCY_LIBS_AND_FILES
 	   #cuda
-	   "${CUDA_TOOLKIT_ROOT_DIR}/bin/cudart64_80.dll"
+	   "${CUDA_TOOLKIT_ROOT_DIR}/bin/cudart64_100.dll"
 	   
 	   #freeglut
        "${CMAKE_CURRENT_SOURCE_DIR}/submodule/apis_vs2015/freeglut-3.0/bin/x64/freeglut.dll"
