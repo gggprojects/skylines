@@ -11,7 +11,7 @@
 
 using namespace sl::queries;
 
-WeightedQuery wq(1);
+WeightedQuery wq(0); // if >1 GPU exist, choose the correct one
 HANDLE hConsole;
 
 enum class DesiredOutputSize {

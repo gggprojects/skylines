@@ -22,7 +22,7 @@ namespace sl { namespace ui { namespace main_window {
         QMainWindow(parent),
         ui_(new Ui::MainWindow),
         distance_type_(queries::algorithms::DistanceType::Nearest) {
-        weighted_query_ptr_ = std::make_shared<sl::queries::WeightedQuery>(1);
+        weighted_query_ptr_ = std::make_shared<sl::queries::WeightedQuery>(0); //if >1 GPUs exist - choose the correct one
         ui_->setupUi(this);
         ogl_ = new ogl::OGLWidget(weighted_query_ptr_, this);
         ui_->horizontalLayout_2->addWidget(ogl_);

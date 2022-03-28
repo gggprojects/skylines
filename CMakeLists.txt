@@ -64,7 +64,8 @@ include_directories(SYSTEM "submodule/apis_vs2015/fast-cpp-csv-parser-master/inc
 #CUDA
 find_package(CUDA QUIET REQUIRED)
 #LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_32 --gpu-code=sm_62 --use_fast_math) #gpu-architecture == arch gpu-code == code
-LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_35 --gpu-code=sm_35)
+#LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_35 --gpu-code=sm_35)
+LIST(APPEND CUDA_NVCC_FLAGS --gpu-architecture=compute_61 --gpu-code=sm_61) #GTX 1080
 LIST(APPEND CUDA_NVCC_FLAGS_DEBUG -g -G)
 CUDA_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/skylines_engine)
 set(CUDA_VERBOSE_BUILD ON CACHE BOOL "" FORCE)
